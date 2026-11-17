@@ -1,14 +1,17 @@
+import type { GeneratePlanInput, GeneratePlanResult } from "../api/planner";
 import type { AppApi } from "../api";
 import { errorMessage } from "../api/client";
 import { createInitialState } from "./appState";
 import type { AppAction, AppState } from "./appState";
 
 export interface DataSnapshot {
+  generating: boolean; generationResult: GeneratePlanResult | null; generationError: string;
+  generationRange: GeneratePlanInput | null;
   state: AppState; status: "loading" | "ready" | "error";
   error: string; mutationError: string; pending: boolean;
 }
 export function createAppDataStore(api: AppApi) {
-  let snapshot: DataSnapshot = { state: createInitialState(), status: "loading", error: "", mutationError: "", pending: false };
+  let snapshot: DataSnapshot = { generating: false, generationResult: null, generationError: "", generationRange: null, state: createInitialState(), status: "loading", error: "", mutationError: "", pending: false };
   const listeners = new Set<() => void>();
   let loading: Promise<void> | null = null;
   function publish(change: Partial<DataSnapshot>) {
@@ -93,10 +96,22 @@ export function createAppDataStore(api: AppApi) {
       return message;
     } finally { publish({ pending: false }); }
   }
+  async function generatePlan(input: GeneratePlanInput): Promise<void> {
+    if (snapshot.pending || loading || snapshot.status !== "ready") return;
+    publish({ pending: true, generating: true, generationResult: null, generationError: "", generationRange: input });
+    try {
+      const result = await api.planner.generate(input);
+      publish({ generationResult: result, state: { ...snapshot.state,
+        risks: snapshot.state.risks.map(risk => ({ ...risk, stale: true })) } });
+      await load(); // Reuse the normal shared refresh, including the committed sessions.
+    } catch (error) {
+      publish({ generationError: errorMessage(error) });
+    } finally { publish({ pending: false, generating: false }); }
+  }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, dispatch,
+    load, dispatch, generatePlan,
     clearMutationError() { publish({ mutationError: "" }); },
   };
 }

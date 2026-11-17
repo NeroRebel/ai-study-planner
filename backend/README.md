@@ -1,6 +1,6 @@
 # AI Study Planner backend
 
-FastAPI remains the application backend. Supabase hosts PostgreSQL; React never receives database credentials or talks directly to Supabase. This phase implements resource CRUD and lifecycle validation only. The approved frontend continues using its independent MockProvider.
+FastAPI remains the application backend. Supabase hosts PostgreSQL; React never receives database credentials or talks directly to Supabase. The API implements resource CRUD, lifecycle validation, and explicit deterministic study-session generation. The approved frontend uses its shared API-backed AppDataProvider.
 
 ## Architecture and files
 
@@ -32,7 +32,7 @@ backend/
 
 Request flow: React → FastAPI route → business service → SQLAlchemy → Supabase PostgreSQL. Routes validate input and delegate mutations to services. Repositories contain simple queries. Each application instance owns one pooled engine; request sessions are dependency-injected and closed after use, rolling back uncommitted work on errors. Startup does not create tables, migrate, or seed.
 
-No scheduling, deadline-risk engine, replanning, AI calls, authentication, ownership, Supabase SDK, Storage, Realtime, or Edge Functions are implemented. There is one demo workspace; a future ownership migration can add user IDs to the four core resources. No user table or authorization mechanism is prematurely introduced.
+No deadline-risk engine, automatic replanning, AI calls, authentication, ownership, Supabase SDK, Storage, Realtime, or Edge Functions are implemented. There is one demo workspace; a future ownership migration can add user IDs to the four core resources. No user table or authorization mechanism is prematurely introduced.
 
 ## Environment and dependencies
 
@@ -120,6 +120,12 @@ The default server is available at [localhost:8000](http://localhost:8000).
 Without DATABASE_URL, health and API documentation still work; database endpoints return 503. An invalid configured URL fails setup with a clear error. Health alone is a liveness check, not proof that migrations or database connectivity are ready.
 
 There is intentionally no authentication. Run this phase locally or within a controlled development environment; it is not a public multi-user deployment.
+
+## Deterministic study scheduling
+
+POST /api/planner/generate accepts inclusive date_from/date_to (1–31 days) and optional task_ids. It fills unreserved remaining work into availability using the documented deterministic policy, commits new PLANNED sessions atomically, and returns saved sessions plus complete/partial/unscheduled counts and reasons. Existing sessions and task progress remain untouched. Repeat generation fills only outstanding deficits; there is no destructive regenerate mode or schema migration.
+
+The Calendar invokes this action for the displayed week. See [scheduler policy and API](../docs/scheduler.md) for exact ordering, 60/30-minute block rules, conservative DST handling, idempotency, and limits.
 
 ## API resources
 
@@ -219,6 +225,6 @@ Initial automated verification: 63 pytest tests passed on Python 3.15.0. The dec
 
 ## Next phase and limitations
 
-The next phase can add a frontend REST adapter and explicit DTO mapping while preserving its approved design. Backend UUIDs differ from existing fixture IDs; UTC instants and local calendar times need explicit mapping. Do not replace MockProvider as part of this backend foundation.
+The frontend REST adapter and DTO mapping are implemented. Scheduling is an explicit action; task/availability edits still do not trigger automatic replanning. Later phases can add the deterministic risk engine and affected-plan reconciliation separately.
 
-No risk values or planning decisions are fabricated by CRUD endpoints. There is no User/profile/preferences persistence, authorization, automatic missed-session detection, automatic scheduling/replanning, or assistant endpoint. These remain later phases. Updating APP_TIMEZONE after entering local sessions requires a deliberate migration/reinterpretation policy; keep it stable for the demo workspace.
+No risk values or planning decisions are fabricated by CRUD endpoints. There is no User/profile/preferences persistence, authorization, automatic missed-session detection, automatic replanning, or assistant endpoint. These remain later phases. Updating APP_TIMEZONE after entering local sessions requires a deliberate migration/reinterpretation policy; keep it stable for the demo workspace.

@@ -29,7 +29,7 @@ export function StudyBlock({
       ((timeMinutes(session.end_time) - timeMinutes(session.start_time)) / ((endHour - startHour) * 60)) * 100 + "%",
   } as CSSProperties;
   return (
-    <li className={"study-block tone-" + subject.color} style={style}>
+    <li className={"study-block tone-" + subject.color + (session.planned_minutes < 60 ? " is-short-session" : "")} style={style}>
       <button
         className="study-block-button"
         onClick={() => openSession({ id: session.id })}

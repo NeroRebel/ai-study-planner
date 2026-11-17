@@ -1,3 +1,4 @@
+import { plannerApi } from "./planner";
 import { createApiClient } from "./client";
 import { subjectsApi } from "./subjects";
 import { tasksApi } from "./tasks";
@@ -6,6 +7,6 @@ import { studySessionsApi } from "./studySessions";
 export function createApi(baseUrl: string) {
   const client = createApiClient(baseUrl);
   return { subjects: subjectsApi(client), tasks: tasksApi(client),
-    availability: availabilityApi(client), sessions: studySessionsApi(client) };
+    availability: availabilityApi(client), sessions: studySessionsApi(client), planner: plannerApi(client) };
 }
 export type AppApi = ReturnType<typeof createApi>;

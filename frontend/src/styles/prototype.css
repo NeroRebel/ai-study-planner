@@ -1374,3 +1374,14 @@
 .data-notice { margin: 12px 24px; padding: 10px 14px; border: 1px solid var(--border, #e5e3dd); border-radius: 10px; font-size: 13px; }
 .data-notice button { margin-left: 12px; }
 .data-refresh { padding: 12px 24px; }
+
+/* Preserve true slot height for generated short blocks; the agenda remains full-sized. */
+@media (min-width: 768px) {
+  .calendar-expanded .study-block.is-short-session {
+    min-height: 0;
+    height: var(--session-height);
+    padding: 0 4px;
+  }
+  .calendar-expanded .is-short-session .block-task,
+  .calendar-expanded .is-short-session .block-status { display: none; }
+}

@@ -6,10 +6,11 @@ import { useAppData } from "../../hooks/useAppData";
 import { selectDays } from "../../state/selectors";
 import { timeMinutes } from "../../state/appState";
 import { addDays, mondayOf, weekLabel } from "../../utils/dates";
+import { PlannerFeedback } from "./PlannerFeedback";
 import { StudyBlock } from "./StudyBlock";
 
 export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
-  const { state, openSession } = useAppData();
+  const { state, openSession, pending, generating, generatePlan, generationResult, generationError, generationRange } = useAppData();
   const [week, setWeek] = useState(currentWeek());
   const [selectedDate, setSelectedDate] = useState(todayDate());
   const days = selectDays(state, week);
@@ -54,7 +55,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
           <span className="week-arrows">
             <button
               type="button"
-              disabled={!expanded}
+              disabled={!expanded || generating}
               aria-label="Previous week"
               onClick={() => changeWeek(addDays(week, -7))}
             >
@@ -62,7 +63,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
             </button>
             <button
               type="button"
-              disabled={!expanded}
+              disabled={!expanded || generating}
               aria-label="Next week"
               onClick={() => changeWeek(addDays(week, 7))}
             >
@@ -73,6 +74,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
             <>
               <button
                 className="button calendar-today"
+                disabled={generating}
                 onClick={() => {
                   setWeek(currentWeek());
                   setSelectedDate(todayDate());
@@ -85,6 +87,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
                 <input
                   type="date"
                   aria-label="Week selector"
+                  disabled={generating}
                   value={week}
                   onChange={(event) => {
                     if (event.target.value) changeWeek(event.target.value);
@@ -100,6 +103,11 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
       {expanded && (
         <div className="calendar-meta">
           <span>Week view · Europe/Budapest · today: {todayDate()}</span>
+          <div className="header-actions">
+          <button type="button" className="button button-primary" disabled={pending}
+            onClick={() => { void generatePlan({ date_from: week, date_to: addDays(week, 6) }); }}>
+            {generating ? "Generating study plan…" : "Generate study plan"}
+          </button>
           <button
             className="text-button"
             onClick={() => openSession({ id: "new", date: selectedDate })}
@@ -107,8 +115,11 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
             <Plus size={14} />
             Add study block
           </button>
+          </div>
         </div>
       )}
+      {expanded && generationRange?.date_from === week && <PlannerFeedback
+        result={generationResult} error={generationError} tasks={state.tasks} />}
       <div
         className="mobile-week-strip"
         role="group"
@@ -221,7 +232,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
         </div>
       </div>
       <div className="planner-footnote">
-        Manual schedule · Europe/Budapest
+        Entered study schedule · Europe/Budapest
         {expanded ? " · shaded windows show entered availability" : ""}
       </div>
     </section>

@@ -52,7 +52,7 @@ Subjects, Tasks, Availability, and Study Sessions are persisted through /api end
 
 - Subjects: overview/details, add/edit, delete. Deletion with linked tasks is rejected by FastAPI.
 - Tasks: list, filters, sorting, create/edit/progress, completion, cancellation, and explicit deletion. Deleting a task warns that linked sessions/history are also removed. Domain effort/status normalization and reservation cleanup belong to FastAPI.
-- Calendar: current Monday–Sunday week, week navigation, dated availability add/edit/delete, manual study-block add/edit/delete, and recorded outcomes.
+- Calendar: current Monday–Sunday week, week navigation, dated availability add/edit/delete, manual study-block add/edit/delete, recorded outcomes, and Generate study plan for the displayed week.
 - Session outcomes include reported minutes and input-only task_remaining_hours or explicit confirm_no_progress. These are submitted together to the existing atomic backend outcome service. Time spent is not automatically deducted from task effort.
 - Closed-task history remains readable. Historical structural changes and conflicting reservations are rejected by the backend, with an explanation rather than automatic replanning.
 
@@ -73,7 +73,7 @@ Dashboard counts, subject/overall effort progress, task deadlines, reported stud
 - services/mockAssistant.ts remains scripted. Replies and action targets read the loaded subjects, tasks, sessions, and deadlines using persisted IDs. Chat text never mutates entities. Suggested actions open the ordinary API-validated editors. Relative Friday references use the current Budapest date.
 - Profile/settings preferences and chat history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
 
-No scheduling, calculated risk, automatic replanning, LLM, authentication, notifications, external calendar integration, or PDF import is implemented.
+Automatic study-session generation is implemented as an explicit backend action. Calculated risk, automatic replanning, LLM, authentication, notifications, external calendar integration, and PDF import remain unimplemented.
 
 ## Tests and persistence verification
 
@@ -95,3 +95,9 @@ These live checks are separate from the normal mocked unit tests. No backend sou
 There is no offline write queue, optimistic persistence, automatic retry of writes, realtime synchronization, or concurrent-edit versioning. If a network interruption makes a write's outcome uncertain, refresh before retrying. Collection refresh is explicit; local state is not a separate persistence layer. All current session history is loaded for a small semester dataset.
 
 The existing single-profile backend has no authentication. Settings/profile persistence, backend aggregate endpoints, and frontend ownership models remain future work. Drag-and-drop is not implemented.
+
+## Generate study plan
+
+The expanded weekly planner calls POST /api/planner/generate through api/planner.ts and the shared data store. The selected week determines the inclusive date range. The button and week controls are disabled while generating; all persisted collections refresh after success so generated blocks appear immediately. Partial results show the number of tasks that could not fit, unscheduled minutes, and reasons without treating a saved partial plan as an API failure. Errors retain the current calendar. A committed result is retained if refresh fails; Retry loading never reposts generation.
+
+Existing manual/generated/history blocks are preserved and count against capacity and remaining reservations. Pressing Generate again fills only missing work. There is no frontend scheduling algorithm, destructive regeneration, or new dependency. See [scheduler documentation](../docs/scheduler.md) for the exact backend policy.

@@ -31,7 +31,7 @@ export function CalendarPage() {
         onClick={() => { setError(""); setAvailabilityOpen(true); }}>
         <CalendarDays size={15} />Availability</button></div>} />
     <WeeklyPlanner expanded />
-    <p className="page-note">Manual blocks are saved to your study server. No automatic scheduling or replanning runs.</p>
+    <p className="page-note">Generate a plan for the displayed week or add blocks manually. Existing sessions are preserved; progress changes only when you report work.</p>
     {availabilityOpen && <Modal title="Study availability" onClose={() => setAvailabilityOpen(false)} wide>
       <p className="muted">Enter dated study windows before reserving blocks. These are available periods, not scheduled study time.</p>
       <form onSubmit={save} className="editor-form availability-form" aria-busy={pending}>

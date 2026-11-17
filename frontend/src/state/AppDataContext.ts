@@ -1,9 +1,12 @@
+import type { DataSnapshot } from "./appDataStore";
+import type { GeneratePlanInput } from "../api/planner";
 import { createContext } from "react";
 import type { AppAction, AppState } from "./appState";
 import type { AssistantMessageData } from "../types";
 import type { selectSummary, selectDays } from "./selectors";
 export interface SessionDialogRequest { id: string; task_id?: string; date?: string; }
-export interface AppDataContextValue {
+export interface AppDataContextValue extends Pick<DataSnapshot, "generating" | "generationResult" | "generationError" | "generationRange"> {
+  generatePlan: (input: GeneratePlanInput) => Promise<void>;
   state: AppState;
   dispatch: (action: AppAction) => Promise<string | null>;
   status: "loading" | "ready" | "error"; error: string; mutationError: string; pending: boolean;

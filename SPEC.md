@@ -148,7 +148,7 @@ The primary UI displays a week. Generation accepts an explicit interval; risk an
 8. Return unallocated work and clear reasons if the constraints cannot be satisfied. Never overbook to conceal an infeasible request.
 9. Use stable tie-breaking for equivalent tasks. The same snapshot, configuration, interval, and evaluation time must produce equivalent allocations without duplicates on repeat requests.
 
-The final scheduling formula and weighting strategy are deliberately unspecified. They may be refined during implementation and testing, then documented with representative examples. Changing weights must not violate these invariants.
+The first implemented scheduling policy is greedy-v1, specified in [docs/scheduler.md](docs/scheduler.md): local due-date urgency, explicit priority, exact deadline, unreserved effort, difficulty, and task ID establish a stable ordering. It adds 60-minute target blocks to safe available time while preserving every existing session. Future policy refinements require a documented version and must preserve these invariants; the risk and replanning engines remain separate future phases.
 
 ### Outputs and acceptance
 

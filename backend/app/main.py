@@ -28,7 +28,7 @@ def create_app(settings: Settings | None = None, *, db_session_factory=None) -> 
 
     application = FastAPI(
         title="AI Study Planner API", version="0.1.0", lifespan=lifespan,
-        description="Single-student CRUD foundation. No scheduling, risk engine, replanning, authentication, or AI integration.",
+        description="Single-student CRUD and deterministic additive scheduling. No risk engine, automatic replanning, authentication, or AI integration.",
     )
     application.state.settings = config
     application.state.session_factory = db_session_factory
