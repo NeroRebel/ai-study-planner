@@ -1,0 +1,40 @@
+:root {
+  font-family:
+    Inter,
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: #282c34;
+  background: #f9f9f7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --background: #f9f9f7;
+  --surface: #fff;
+  --text: #282c34;
+  --muted: #787e89;
+  --border: #ebedf0;
+  --gold: #bd965d;
+  --radius: 12px;
+}
+.tone-blue {
+  --tone-bg: #edf2fc;
+  --tone-text: #506b9d;
+  --tone-fill: #94ade1;
+}
+.tone-gold {
+  --tone-bg: #faf4e9;
+  --tone-text: #876b41;
+  --tone-fill: #d8b17d;
+}
+.tone-purple {
+  --tone-bg: #f0edfc;
+  --tone-text: #7762aa;
+  --tone-fill: #b4a1e8;
+}
+.tone-green {
+  --tone-bg: #eef5f0;
+  --tone-text: #537661;
+  --tone-fill: #91b69b;
+}

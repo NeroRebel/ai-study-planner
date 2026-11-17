@@ -1,0 +1,13 @@
+# Tested on Python 3.15; Python 3.12+ is required.
+fastapi==0.162.0
+# Keep the httpx TestClient integration on its supported pre-1.0 Starlette line.
+starlette==0.52.1
+uvicorn==0.54.0
+SQLAlchemy==2.0.55
+alembic==1.20.1
+pydantic==2.14.1
+pydantic-settings==2.16.2
+psycopg[binary]==3.3.6
+tzdata==2026.6
+pytest==9.2.0
+httpx==0.28.1
