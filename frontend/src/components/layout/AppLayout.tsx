@@ -1,3 +1,4 @@
+import { ProfileAvatar } from "../../auth/ProfilePanel";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { GraduationCap, Sparkles, Menu } from "lucide-react";
@@ -12,17 +13,12 @@ import { useAppData } from "../../hooks/useAppData";
 
 export function AppLayout() {
   const { pathname } = useLocation();
-  const { state, taskDialog, sessionDialog, pending, mutationError, clearMutationError, retry, status } = useAppData();
+  const { taskDialog, sessionDialog, pending, mutationError, clearMutationError, retry, status } = useAppData();
   const [more, setMore] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const title =
     navigation.find((item) => item.to === pathname)?.label ??
     (pathname === "/assistant" ? "Assistant" : "Page not found");
-  const initials = state.preferences.name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("");
   useEffect(() => {
     document.title = title + " · AI Study Planner";
     window.scrollTo(0, 0);
@@ -50,9 +46,7 @@ export function AppLayout() {
               <Sparkles size={16} />
               Assistant
             </Link>
-            <span className="mini-avatar" aria-label={state.preferences.name}>
-              {initials}
-            </span>
+            <ProfileAvatar className="mini-avatar" />
             <button
               className="mobile-more icon-button"
               onClick={() => setMore(true)}

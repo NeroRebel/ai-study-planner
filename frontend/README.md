@@ -71,9 +71,9 @@ Dashboard counts, subject/overall effort progress, task deadlines, reported stud
 - Risk is live derived backend data from `GET /api/risks`, not a fixture. One batch powers subjects, task details, Deadlines and Dashboard. Loading/errors are independent of core entities; failed/expired assessments display unavailable with retry. No-active-work results have no risk label.
 - data/prototypeHistoricalAnalytics.ts contains the fixed earlier completion-history points. The chart labels them as historical fixtures; its Current point uses saved task data.
 - services/mockAssistant.ts remains scripted. Replies and action targets read the loaded subjects, tasks, sessions, and deadlines using persisted IDs. Chat text never mutates entities. Suggested actions open the ordinary API-validated editors. Relative Friday references use the current Budapest date.
-- Profile/settings preferences and chat history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
+- Account profiles are persistent. Study/appearance preferences and scripted chat history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
 
-Automatic study-session generation is implemented as an explicit backend action. Unattended automatic replanning, LLM, authentication, notifications, external calendar integration, and PDF import remain unimplemented.
+Automatic study-session generation is implemented as an explicit backend action. Unattended automatic replanning, LLM, notifications, external calendar integration, and PDF import remain unimplemented.
 
 ## Tests and persistence verification
 
@@ -88,13 +88,13 @@ Live verification for this integration used the running FastAPI service with its
 5. Read the same records through a fresh API-backed store and verified the configured localhost:5173 CORS origin.
 6. Removed only the five exact temporary verification records after checking their server-generated IDs, timestamps, and relationships. Existing demo records were retained.
 
-These live checks are separate from the normal mocked unit tests. No backend source or database migrations were changed.
+These historical integration checks predate authentication. Current Auth/provider live checks and ownership migration verification are documented in docs/authentication.md.
 
 ## Limits
 
 There is no offline write queue, optimistic persistence, automatic retry of writes, realtime synchronization, or concurrent-edit versioning. If a network interruption makes a write's outcome uncertain, refresh before retrying. Collection refresh is explicit; local state is not a separate persistence layer. All current session history is loaded for a small semester dataset.
 
-The existing single-profile backend has no authentication. Settings/profile persistence, backend aggregate endpoints, and frontend ownership models remain future work. Drag-and-drop is not implemented.
+Supabase Auth, persistent profiles and backend per-user ownership are implemented. Study preferences and historical analytics fixtures remain prototypes; drag-and-drop is not implemented.
 
 ## Generate study plan
 
@@ -109,3 +109,12 @@ The provider refreshes the read-only risk batch after loading/mutations and at i
 ## Explicit replanning
 
 Calendar has a Replan button for the displayed week. It requests a read-only preview and shows session moves/additions/removals, affected task risk changes and unscheduled work. Apply changes sends the snapshot/diff version, then refreshes shared entities and risks. Cancel saves nothing. Stale conflicts require a fresh preview; duplicate submissions are disabled. A committed apply followed by refresh failure is not automatically repeated. Existing session editors show planner origin and explain that changing placement makes the block manual. Backend migration `0002_session_origin` must be applied. See [replanning policy](../docs/replanning.md); there is no automatic background replanning or LLM.
+
+
+## Authentication and profiles
+
+Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in ignored .env.local, alongside VITE_API_BASE_URL. Use only the public publishable/legacy anon key; Vite refuses backend-secret/service-role configuration. Restart the dev server. Supabase JS handles Auth and private avatars only; core entities still use FastAPI.
+
+AuthProvider restores identity before protected routes mount. Sign In/Sign Up/Check Email/Forgot Password/Reset Password and /auth/callback implement the email/PKCE and optional Google flows. The centralized API client adds the current bearer token and handles 401 without retries. Planner providers are keyed per identity; unmount clears cached entities, risks and replanning previews and suppresses late responses. Profile requests also reject obsolete account responses.
+
+Settings Account edits the persistent profile, displays Auth email/fixed Budapest timezone, manages private signed-URL avatars and provides sign-out/typed-confirmation account deletion. Other study/appearance preferences remain local. Backend migration 0003 and private avatars bucket policies are required. See [docs/authentication.md](../docs/authentication.md) for exact Supabase/Google/Storage setup, recovery limitations and live two-user acceptance steps. Those provider flows are unit-tested with mocks but were not live-verified without operator-supplied Auth configuration.

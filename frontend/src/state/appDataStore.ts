@@ -15,13 +15,16 @@ export interface DataSnapshot {
   state: AppState; status: "loading" | "ready" | "error";
   error: string; mutationError: string; pending: boolean;
 }
-export function createAppDataStore(api: AppApi) {
+export function createAppDataStore(api: AppApi, initialName?: string) {
   let snapshot: DataSnapshot = { replanStatus: "idle", replanPreview: null, replanError: "", replanMessage: "", replanRange: null, riskStatus: "loading", riskError: "", riskExpiresAt: null, generating: false, generationResult: null, generationError: "", generationRange: null, state: createInitialState(), status: "loading", error: "", mutationError: "", pending: false };
+  if (initialName) snapshot.state.preferences.name = initialName;
+  let disposed = false;
   const listeners = new Set<() => void>();
   let loading: Promise<void> | null = null;
   let riskRevision = 0;
   let riskRequest: { revision: number; promise: Promise<void> } | null = null;
   function publish(change: Partial<DataSnapshot>) {
+    if (disposed) return;
     snapshot = { ...snapshot, ...change };
     listeners.forEach(listener => listener());
   }
@@ -54,6 +57,7 @@ export function createAppDataStore(api: AppApi) {
     return promise;
   }
   async function load() {
+    if (disposed) return;
     if (loading) return loading;
     if (snapshot.replanStatus === "ready") cancelReplan();
     invalidateRisks();
@@ -78,6 +82,7 @@ export function createAppDataStore(api: AppApi) {
     return { title, description, subject_id, deadline, estimated_hours, progress, priority, difficulty, status };
   }
   async function dispatch(action: AppAction): Promise<string | null> {
+    if (disposed) return "Your session has ended. Please sign in again.";
     if (action.type === "preferences") {
       publish({ state: { ...snapshot.state, preferences: action.value } });
       return null;
@@ -191,7 +196,17 @@ export function createAppDataStore(api: AppApi) {
       await refreshRisks(true);
     } finally { publish({ pending: false }); }
   }
+  function dispose() {
+    disposed = true; riskRevision++; riskRequest = null;
+    snapshot = { ...snapshot, state: createInitialState(), status: "loading", pending: false,
+      riskStatus: "loading", riskError: "", riskExpiresAt: null,
+      replanPreview: null, replanStatus: "idle", replanError: "", replanMessage: "", replanRange: null,
+      generationResult: null, generationRange: null, generationError: "", generating: false,
+      error: "", mutationError: "" };
+    listeners.clear();
+  }
   return {
+    dispose, hasSubscribers: () => listeners.size > 0,
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     load, dispatch, generatePlan, refreshRisks, previewReplan, applyReplan, cancelReplan,

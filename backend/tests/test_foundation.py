@@ -1,3 +1,5 @@
+from app.core.auth import Principal, get_current_user
+from tests.conftest import TEST_USER
 from datetime import date
 from uuid import uuid4
 
@@ -26,7 +28,9 @@ def test_health_docs_and_openapi(client):
 
 
 def test_missing_database_still_allows_health():
-    with TestClient(create_app(Settings(database_url=None, _env_file=None))) as client:
+    app = create_app(Settings(database_url=None, _env_file=None))
+    app.dependency_overrides[get_current_user] = lambda: Principal(TEST_USER)
+    with TestClient(app) as client:
         assert client.get("/health").status_code == 200
         assert client.get("/docs").status_code == 200
         response = client.get("/api/subjects")
@@ -50,6 +54,7 @@ def test_cors_uses_explicit_origins(client):
 def test_tests_ignore_environment_database(monkeypatch, db_factory):
     monkeypatch.setenv("DATABASE_URL", "postgresql://invalid:private@unreachable.invalid/dev")
     app = create_app(Settings(database_url=None, _env_file=None), db_session_factory=db_factory)
+    app.dependency_overrides[get_current_user] = lambda: Principal(TEST_USER)
     with TestClient(app) as client:
         assert client.post("/api/subjects", json={"name": "Isolated"}).status_code == 201
     assert db_factory.kw["bind"].dialect.name == "sqlite"

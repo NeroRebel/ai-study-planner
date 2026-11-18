@@ -1,3 +1,4 @@
+from app.models.profile import Profile
 from app.models.availability import Availability
 from app.models.study_session import StudySession
 from app.models.subject import Subject

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
         hide_input_in_errors=True,
     )
 
+    supabase_url: str = ""
+    supabase_publishable_key: SecretStr | None = None
+    supabase_service_role_key: SecretStr | None = None
     database_url: SecretStr | None = None
     direct_url: SecretStr | None = None
     cors_origins: str = "http://localhost:5173"
@@ -22,6 +25,14 @@ class Settings(BaseSettings):
     db_max_overflow: int = Field(default=2, ge=0, le=20)
     db_pool_timeout: int = Field(default=15, ge=1)
     db_pool_recycle: int = Field(default=1800, ge=60)
+
+    @field_validator("supabase_url")
+    @classmethod
+    def auth_url(cls, value: str) -> str:
+        parts = urlsplit(value)
+        if value and (parts.scheme != "https" or not parts.hostname or parts.username or parts.password or parts.query or parts.fragment or parts.path not in {"", "/"}):
+            raise ValueError("SUPABASE_URL must be an HTTPS project origin.")
+        return value.rstrip("/")
 
     @field_validator("database_url", "direct_url", mode="before")
     @classmethod
@@ -35,6 +46,8 @@ class Settings(BaseSettings):
             ZoneInfo(value)
         except (ZoneInfoNotFoundError, ValueError) as exc:
             raise ValueError("APP_TIMEZONE must be a valid IANA timezone.") from exc
+        if value != "Europe/Budapest":
+            raise ValueError("Authenticated planning currently requires Europe/Budapest.")
         return value
 
     @field_validator("cors_origins")

@@ -3,10 +3,10 @@ from datetime import date, time
 from sqlalchemy import CheckConstraint, Date, Time
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base, IdentityTimestamps
+from app.db.base import Base, IdentityTimestamps, Owned
 
 
-class Availability(IdentityTimestamps, Base):
+class Availability(Owned, IdentityTimestamps, Base):
     __tablename__ = "availability"
     __table_args__ = (CheckConstraint("end_time > start_time", name="interval_order"),)
 

@@ -16,7 +16,7 @@ from app.models import Availability, StudySession, Subject, Task
 from app.models.enums import StudySessionStatus, TaskStatus
 from app.schemas.common import minute_hours
 from app.schemas.risk import RiskResponse, RiskWarning, SubjectRiskAssessment, TaskRiskAssessment
-from app.services.common import now
+from app.services.common import serialize_read, now
 from app.services.planning_capacity import (
     DIFFICULTY_ORDER, PRIORITY_ORDER, available_slots, clock_minute, task_order_key,
 )
@@ -220,8 +220,7 @@ def calculate_risks(tasks: Sequence[Task], subjects: Sequence[Subject],
 def assess_all(db: Session, timezone: str, evaluated_at: datetime | None = None) -> RiskResponse:
     # Shared read lock gives four SELECTs a consistent snapshot relative to every
     # existing exclusive-lock CRUD/scheduler write. It never changes table data.
-    if db.get_bind().dialect.name == "postgresql":
-        db.execute(text("SELECT pg_advisory_xact_lock_shared(946321, 1)"))
+    serialize_read(db)
     evaluation = evaluated_at if evaluated_at is not None else now()
     subjects = list(db.scalars(select(Subject)))
     tasks = list(db.scalars(select(Task)))

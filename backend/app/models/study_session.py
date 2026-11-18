@@ -1,16 +1,17 @@
 from datetime import date, time
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Date, Enum, ForeignKey, Integer, String, Time
+from sqlalchemy import ForeignKeyConstraint, CheckConstraint, Date, Enum, ForeignKey, Integer, String, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, IdentityTimestamps
+from app.db.base import Base, IdentityTimestamps, Owned
 from app.models.enums import StudySessionStatus
 
 
-class StudySession(IdentityTimestamps, Base):
+class StudySession(Owned, IdentityTimestamps, Base):
     __tablename__ = "study_sessions"
     __table_args__ = (
+        ForeignKeyConstraint(["user_id", "task_id"], ["tasks.user_id", "tasks.id"], name="fk_sessions_owned_task", deferrable=True, initially="DEFERRED"),
         CheckConstraint("origin IN ('MANUAL', 'SCHEDULER')", name="origin_valid"),
         CheckConstraint("end_time > start_time", name="interval_order"),
         CheckConstraint("planned_minutes > 0", name="planned_positive"),
@@ -26,4 +27,4 @@ class StudySession(IdentityTimestamps, Base):
     planned_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
     completed_minutes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     status: Mapped[StudySessionStatus] = mapped_column(Enum(StudySessionStatus, native_enum=False, create_constraint=True, name="study_session_status"), default=StudySessionStatus.PLANNED)
-    task: Mapped["Task"] = relationship(back_populates="study_sessions")
+    task: Mapped["Task"] = relationship(back_populates="study_sessions", foreign_keys=[task_id])

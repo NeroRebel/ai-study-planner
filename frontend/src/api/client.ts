@@ -9,23 +9,27 @@ export class ApiError extends Error {
 export const errorMessage = (error: unknown) =>
   error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
 
-export function createApiClient(baseUrl: string) {
+export interface ApiAuth { getAccessToken: () => Promise<string | null>; onUnauthorized?: () => void; }
+
+export function createApiClient(baseUrl: string, auth?: ApiAuth) {
   const base = baseUrl.replace(/\/$/, "");
   return {
     async request<T>(path: string, method = "GET", body?: unknown): Promise<T> {
       let response: Response;
+      const accessToken = auth ? await auth.getAccessToken() : null;
+      if (auth && !accessToken) { auth.onUnauthorized?.(); throw new ApiError("Your session has ended. Please sign in again.", 401); }
       try {
         response = await fetch(base + path, {
           method,
           signal: AbortSignal.timeout(20_000),
-          headers: body === undefined ? { Accept: "application/json" } : {
-            Accept: "application/json", "Content-Type": "application/json",
-          },
+          headers: { Accept: "application/json", ...(body === undefined ? {} : {"Content-Type":"application/json"}),
+            ...(accessToken ? {Authorization: `Bearer ${accessToken}`} : {}) },
           body: body === undefined ? undefined : JSON.stringify(body),
         });
       } catch {
         throw new ApiError("Cannot reach the study server. Check your connection and try again.");
       }
+      if (response.status === 401) { auth?.onUnauthorized?.(); throw new ApiError("Your session has ended. Please sign in again.", 401); }
       if (!response.ok) {
         let message = response.status === 404 ? "This record no longer exists. Refresh your data."
           : response.status === 409 ? "This change conflicts with existing data."

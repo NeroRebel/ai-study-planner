@@ -1,3 +1,4 @@
+import { ProfileAvatar } from "../../auth/ProfilePanel";
 import { GraduationCap, ChevronRight } from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import { useAppData } from "../../hooks/useAppData";
@@ -29,13 +30,7 @@ export function Sidebar() {
       </nav>
       <div className="sidebar-bottom">
         <Link to="/settings" className="profile">
-          <span className="avatar">
-            {profile.name
-              .split(" ")
-              .map((part) => part[0])
-              .slice(0, 2)
-              .join("")}
-          </span>
+          <ProfileAvatar />
           <span>
             <strong>{profile.name}</strong>
             <small>{profile.program || "Student workspace"}</small>

@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 
-from fastapi import Request
+from fastapi import Depends, Request
+from app.core.auth import Principal, get_current_user
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL, Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
@@ -50,9 +51,10 @@ def session_factory(engine: Engine) -> sessionmaker[Session]:
     return sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
 
 
-def get_db(request: Request) -> Iterator[Session]:
+def get_db(request: Request, principal: Principal = Depends(get_current_user)) -> Iterator[Session]:
     factory = request.app.state.session_factory
     if factory is None:
         raise DomainError("Database is not configured. Set DATABASE_URL in backend/.env.", 503)
     with factory() as session:
+        session.info["user_id"] = principal.user_id
         yield session

@@ -1,3 +1,5 @@
+import { ProfilePanel } from "../auth/ProfilePanel";
+import { useAuth } from "../auth/AuthContext";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Save } from "lucide-react";
@@ -8,6 +10,7 @@ import { Panel } from "../components/common/Panel";
 import { FormField } from "../components/common/FormField";
 
 export function SettingsPage() {
+  const auth = useAuth();
   const { state, dispatch } = useAppData();
   const [form, setForm] = useState<Preferences>(state.preferences);
   const [saved, setSaved] = useState(false),
@@ -28,7 +31,7 @@ export function SettingsPage() {
     }
     dispatch({
       type: "preferences",
-      value: { ...form, name: form.name.trim() },
+      value: { ...form, name: auth.profile?.display_name || "Student" },
     });
     setSaved(true);
     setError("");
@@ -40,20 +43,13 @@ export function SettingsPage() {
         title="Settings"
         description="A few preferences for your student workspace."
       />
+      <ProfilePanel />
       <form onSubmit={save} className="settings-form">
         <Panel
-          title="Profile"
-          subtitle="A local demo profile — no sign-in required"
+          title="Study details"
+          subtitle="Study details and preferences stay local for now"
         >
           <div className="settings-fields">
-            <FormField label="Name">
-              <input
-                required
-                maxLength={80}
-                value={form.name}
-                onChange={(event) => update("name", event.target.value)}
-              />
-            </FormField>
             <FormField label="Study program">
               <input
                 value={form.program}

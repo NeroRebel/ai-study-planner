@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import router
 from app.api.routes.health import router as health_router
 from app.core.config import Settings
+from app.db import ownership  # Register central request ownership enforcement.
 from app.core.exceptions import install_handlers
 from app.db.session import build_engine, session_factory
 
@@ -28,13 +29,13 @@ def create_app(settings: Settings | None = None, *, db_session_factory=None) -> 
 
     application = FastAPI(
         title="AI Study Planner API", version="0.1.0", lifespan=lifespan,
-        description="Single-student CRUD, deterministic additive scheduling and read-only deadline risk. No automatic replanning, authentication, or AI integration.",
+        description="Authenticated personal study workspaces with deterministic scheduling, risk and preview/apply replanning. No LLM integration.",
     )
     application.state.settings = config
     application.state.session_factory = db_session_factory
     application.add_middleware(
         CORSMiddleware, allow_origins=config.allowed_origins, allow_credentials=False,
-        allow_methods=["GET", "POST", "PATCH", "DELETE"], allow_headers=["Content-Type"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"], allow_headers=["Content-Type", "Authorization"],
     )
     install_handlers(application)
     application.include_router(health_router)

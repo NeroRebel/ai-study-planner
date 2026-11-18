@@ -26,7 +26,7 @@ The application supports better decisions; it cannot guarantee completion or cor
 
 The primary user is a university student handling multiple subjects and assignments during a semester. The student enters subjects, tasks, assignment deadlines, estimated and remaining hours, priority, difficulty, progress, and available study periods.
 
-The MVP assumes one student profile in a personal workspace. A basic User model leaves room for later account support, without introducing complex authentication, teams, or shared schedules.
+Each authenticated student has a private personal workspace and profile. Supabase Auth manages email/password identity and optional Google sign-in; teams and shared schedules remain outside scope.
 
 ## 4. Core value proposition
 
@@ -72,7 +72,7 @@ Dashboard, Tasks, Subjects, Calendar, Deadlines, Progress, and AI Assistant are 
 
 ## 7. Out of scope
 
-The first MVP excludes Google Calendar integration, PDF assignment import, push notifications and other notification delivery, social features, collaboration, gamification, and complex authentication. These may be future extensions after an explicit specification update.
+The first MVP excludes Google Calendar integration, PDF assignment import, push notifications and other notification delivery, social features, collaboration, gamification, and enterprise authentication. These may be future extensions after an explicit specification update.
 
 Other external calendar integrations, a full academic timetable system, and separate exam-management workflows are not assumed. Exam preparation can be represented as ordinary study tasks. Focus blocks are task-linked study sessions rather than a separate productivity subsystem.
 

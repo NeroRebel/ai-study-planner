@@ -32,7 +32,7 @@ backend/
 
 Request flow: React → FastAPI route → business service → SQLAlchemy → Supabase PostgreSQL. Routes validate input and delegate mutations to services. Repositories contain simple queries. Each application instance owns one pooled engine; request sessions are dependency-injected and closed after use, rolling back uncommitted work on errors. Startup does not create tables, migrate, or seed.
 
-No automatic replanning, AI calls, authentication, ownership, Supabase SDK, Storage, Realtime, or Edge Functions are implemented. There is one demo workspace; a future ownership migration can add user IDs to the four core resources. No user table or authorization mechanism is prematurely introduced.
+Supabase Auth and per-user ownership are implemented; no AI, Realtime or Edge Functions are used. The backend uses HTTP Auth/Admin APIs, not the Supabase Python SDK. Each verified identity has an isolated workspace and profile. Legacy NULL-owner rows are quarantined.
 
 ## Environment and dependencies
 
@@ -119,7 +119,7 @@ The default server is available at [localhost:8000](http://localhost:8000).
 
 Without DATABASE_URL, health and API documentation still work; database endpoints return 503. An invalid configured URL fails setup with a clear error. Health alone is a liveness check, not proof that migrations or database connectivity are ready.
 
-There is intentionally no authentication. Run this phase locally or within a controlled development environment; it is not a public multi-user deployment.
+All /api resources and /health/db require a confirmed Supabase bearer token. /health and /docs remain public. Complete the authentication deployment steps before public use.
 
 ## Deterministic study scheduling
 
@@ -185,7 +185,7 @@ StudySessionStatus: PLANNED/COMPLETED/MISSED/PARTIALLY_COMPLETED.
 
 Deadlines are timezone-aware instants, normalized to UTC and persisted as TIMESTAMPTZ. Availability/session dates and times use the single workspace's APP_TIMEZONE (default Europe/Budapest). Nonexistent or ambiguous DST endpoints are rejected; actual elapsed time determines duration across a DST transition. Past deadlines are permitted for imported/overdue tasks; new planned sessions must satisfy the future/deadline rules.
 
-All API mutations acquire one PostgreSQL transaction-scoped advisory lock for the single demo workspace before validating. This prevents concurrent requests from both passing overlap/capacity checks. Keep future mutation paths within these services. Direct SQL writers are not covered by these service-level cross-row checks. This deliberately simple serialization can be replaced with per-user locking when ownership is introduced.
+All API mutations acquire a PostgreSQL transaction-scoped advisory lock for the current user before validating. This prevents concurrent requests from both passing overlap/capacity checks. Keep future mutation paths within these services. Direct SQL writers are not covered by these service-level cross-row checks. This deliberately simple serialization can be replaced with per-user locking when ownership is introduced.
 
 ## Development seed
 
@@ -227,7 +227,7 @@ Initial automated verification: 63 pytest tests passed on Python 3.15.0. The dec
 
 The frontend REST adapter and DTO mapping are implemented. Scheduling is an explicit action; task/availability edits still do not trigger automatic replanning. Read-only deterministic risk assessment is implemented; affected-plan reconciliation is available through explicit preview/apply.
 
-No risk values or planning decisions are fabricated by CRUD endpoints. There is no User/profile/preferences persistence, authorization, automatic missed-session detection, automatic replanning, or assistant endpoint. These remain later phases. Updating APP_TIMEZONE after entering local sessions requires a deliberate migration/reinterpretation policy; keep it stable for the demo workspace.
+No risk values or planning decisions are fabricated by CRUD endpoints. Profiles and per-user authorization are persistent. Study preferences, automatic missed-session detection, unattended replanning and a real assistant endpoint remain unimplemented. These remain later phases. APP_TIMEZONE and profile timezone are currently constrained to Europe/Budapest; changing that requires a separate migration/reinterpretation design.
 
 ## Deadline risk assessment
 
@@ -238,3 +238,12 @@ No risk values or planning decisions are fabricated by CRUD endpoints. There is 
 Run `alembic upgrade head` before starting this version. Revision `0002_session_origin` adds constrained MANUAL/SCHEDULER origin metadata; all legacy rows remain MANUAL. New generation writes SCHEDULER, manual placement writes MANUAL, and user changes to task/date/time transfer a block to MANUAL. Request bodies cannot set origin.
 
 `POST /api/planner/replan/preview` takes date_from/date_to (up to 31 days) and optional task_ids. `POST /api/planner/replan/apply` takes the same scope plus evaluated_at, fingerprint and plan_digest from the preview. Preview is read-only; Apply revalidates under the existing workspace lock, rejects stale/expired previews with 409 and atomically applies only the diff. No-op Apply writes nothing. See [docs/replanning.md](../docs/replanning.md) for preservation, deterministic displacement, risk comparison and scope limits. No service automatically invokes replanning on ordinary CRUD.
+
+
+## Authentication setup and ownership
+
+Read [docs/authentication.md](../docs/authentication.md). Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in backend/.env; set backend-only SUPABASE_SERVICE_ROLE_KEY for account deletion. Existing DATABASE_URL / DIRECT_URL behavior is unchanged. Run `alembic upgrade head` and `alembic check`, then apply `sql/avatars.sql` with the project administrator connection. Configure confirmed email, app redirects and optional Google provider in Supabase.
+
+Migration 0003 adds profiles and nullable legacy ownership, per-user indexes, same-owner parent FKs, Auth-user cascade and restrictive RLS boundaries. Request sessions derive owners only from validated JWTs, scope ORM queries and SET LOCAL ROLE authenticated with local JWT claims on every transaction. Pure planning policies are unchanged. POST bodies never accept user_id. Replanning fingerprints are owner-bound. GET/PATCH /api/profile bootstrap/update the current profile; DELETE /api/account requires confirmation=DELETE and a backend-only admin operation.
+
+Legacy rows stay invisible and are never auto-claimed. A trusted operator may explicitly run `python -m app.claim_legacy --user-id EXISTING_AUTH_USER_UUID --confirm-claim-legacy` after backup/review. Normal tests remain isolated SQLite with controlled identities and mocked Auth/Storage; they never register/delete real Supabase users. See the guide for the unexecuted live two-user acceptance checks and remaining provider configuration.

@@ -162,3 +162,10 @@ Fixtures should cover normal workload, empty subjects/tasks, no availability, ov
 Suggested build sequence: shared tokens and shell; Dashboard; Tasks and Subjects with forms; Calendar and availability; Deadlines and Progress; assistant panel and action states; responsive and accessibility review. Use the same subject colors across all screens. Progress should show completed versus remaining effort and reported study time using the definitions in SPEC.md, without introducing gamification.
 
 Before API integration, verify navigation access on each layout, readable dense and empty states, form and dialog behavior, calendar overflow, keyboard use, and clearly communicated planning shortfalls. The next phase replaces fixtures with backend data while retaining these interactions and presentation components.
+
+
+## Authentication and profile surfaces
+
+Sign In, Sign Up, Check Email, Forgot Password and Reset Password use the existing warm background, white bordered cards, typography, inputs and restrained buttons. Auth resolution is a neutral loading gate, with no planner data behind it. Google sign-in is a secondary action. Identity is shown using the existing circular sidebar/header avatar or initials.
+
+Settings adds an Account panel for display name, Auth email, avatar upload/removal, fixed Budapest timezone and sign out. The deletion controls are collapsed, explain permanent consequences and require typing DELETE before enabling the destructive action. Existing study preferences and planner screen design remain unchanged. Profile/network errors use existing feedback styles. Avatars keep the same circular dimensions; account changes clear previous images immediately.

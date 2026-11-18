@@ -1,4 +1,7 @@
 import pytest
+from uuid import UUID
+from app.core.auth import Principal, get_current_user
+TEST_USER = UUID("11111111-1111-4111-8111-111111111111")
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -20,7 +23,7 @@ def db_factory():
         connection.execute("PRAGMA foreign_keys=ON")
 
     Base.metadata.create_all(engine)
-    factory = sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
+    factory = sessionmaker(bind=engine, expire_on_commit=False, autoflush=False, info={"user_id":TEST_USER})
     yield factory
     engine.dispose()
 
@@ -29,7 +32,9 @@ def db_factory():
 def application(db_factory):
     # Explicit None wins over any developer DATABASE_URL in the environment.
     settings = Settings(database_url=None, _env_file=None)
-    return create_app(settings, db_session_factory=db_factory)
+    app = create_app(settings, db_session_factory=db_factory)
+    app.dependency_overrides[get_current_user] = lambda: Principal(TEST_USER, "fixture@example.test")
+    return app
 
 
 @pytest.fixture

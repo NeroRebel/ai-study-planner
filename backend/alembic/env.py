@@ -12,6 +12,11 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 target_metadata = Base.metadata
 
+def include_object(obj, name, kind, reflected, compare_to):
+    # Supabase auth.users is externally managed, not a SQLAlchemy application table.
+    return not (kind == "foreign_key_constraint" and name == "fk_profiles_auth_user")
+
+
 def render_item(kind, item, _context):
     if kind == "type" and isinstance(item, UTCDateTime):
         return "sa.DateTime(timezone=True)"
@@ -23,7 +28,7 @@ def run_migrations_offline():
     # URL is passed directly: percent-escaped passwords never enter ConfigParser.
     url = configured_url(settings, migration=True)
     context.configure(url=url, target_metadata=target_metadata, literal_binds=True,
-                      dialect_opts={"paramstyle": "named"}, compare_type=True, render_item=render_item)
+                      dialect_opts={"paramstyle": "named"}, compare_type=True, render_item=render_item, include_object=include_object)
     with context.begin_transaction():
         context.run_migrations()
 
@@ -33,7 +38,7 @@ def run_migrations_online():
     try:
         with engine.connect() as connection:
             context.configure(connection=connection, target_metadata=target_metadata,
-                              compare_type=True, compare_server_default=True, render_item=render_item)
+                              compare_type=True, compare_server_default=True, render_item=render_item, include_object=include_object)
             with context.begin_transaction():
                 context.run_migrations()
     finally:

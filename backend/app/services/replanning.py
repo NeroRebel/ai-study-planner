@@ -22,7 +22,7 @@ from app.schemas.common import minute_hours
 from app.schemas.replanning import ReplanApply, ReplanPreview, ReplanRequest, SessionMove
 from app.schemas.scheduler import PlanningWarning
 from app.schemas.study_session import StudySessionRead
-from app.services.common import now, serialize_write
+from app.services.common import serialize_read, now, serialize_write
 from app.services.planning_capacity import task_order_key
 from app.services.risk_engine import calculate_risks
 from app.services.scheduler import calculate_plan
@@ -36,12 +36,12 @@ def digest(value: object) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True, default=str, separators=(',', ':')).encode()).hexdigest()
 
 
-def snapshot_fingerprint(tasks, subjects, windows, sessions, request, timezone):
+def snapshot_fingerprint(tasks, subjects, windows, sessions, request, timezone, owner_id=None):
     def records(objects):
         return [{column.key: getattr(obj, column.key) for column in inspect(type(obj)).columns}
                 for obj in sorted(objects, key=lambda item: str(item.id))]
     return digest([records(tasks), records(subjects), records(windows), records(sessions),
-                   request.model_dump(mode='json'), timezone, 'affected-v1'])
+                   request.model_dump(mode='json'), timezone, str(owner_id), 'affected-v1'])
 
 
 def session_key(item):
@@ -62,7 +62,7 @@ def session_read(item: StudySession, evaluated_at: datetime) -> StudySessionRead
 
 def calculate_replan(tasks: Sequence[Task], subjects: Sequence[Subject],
                      windows: Sequence[Availability], sessions: Sequence[StudySession], request: ReplanRequest,
-                     evaluated_at: datetime, timezone: str) -> ReplanPreview:
+                     evaluated_at: datetime, timezone: str, owner_id=None) -> ReplanPreview:
     if evaluated_at.tzinfo is None or evaluated_at.utcoffset() is None:
         raise ValueError('Replanning requires a timezone-aware evaluation instant.')
     evaluated_at = evaluated_at.astimezone(UTC)
@@ -75,7 +75,7 @@ def calculate_replan(tasks: Sequence[Task], subjects: Sequence[Subject],
     roots = set(request.task_ids) if request.task_ids is not None else set(by_task)
     if not roots <= by_task.keys():
         raise DomainError('One or more selected tasks no longer exist.', 404)
-    fingerprint = snapshot_fingerprint(tasks, subjects, windows, sessions, request, timezone)
+    fingerprint = snapshot_fingerprint(tasks, subjects, windows, sessions, request, timezone, owner_id)
     warnings, reasons = [], set()
     boundaries = {s.id: interval(s.date, s.start_time, s.end_time, timezone) for s in sessions}
     editable = [s for s in sessions if s.origin == 'SCHEDULER'
@@ -233,9 +233,8 @@ def load_snapshot(db: Session) -> tuple[list[Task], list[Subject], list[Availabi
 
 
 def preview(db: Session, request: ReplanRequest, timezone: str) -> ReplanPreview:
-    if db.get_bind().dialect.name == 'postgresql':
-        db.execute(text('SELECT pg_advisory_xact_lock_shared(946321, 1)'))
-    return calculate_replan(*load_snapshot(db), request, now(), timezone)
+    serialize_read(db)
+    return calculate_replan(*load_snapshot(db), request, now(), timezone, owner_id=db.info.get("user_id"))
 
 
 def apply(db: Session, request: ReplanApply, timezone: str) -> ReplanPreview:
@@ -246,9 +245,9 @@ def apply(db: Session, request: ReplanApply, timezone: str) -> ReplanPreview:
             raise DomainError('Replan preview expired. Request a new preview.', 409)
         plan_request = ReplanRequest(**request.model_dump(include={'date_from', 'date_to', 'task_ids'}))
         snapshot = load_snapshot(db)
-        if snapshot_fingerprint(*snapshot, plan_request, timezone) != request.fingerprint:
+        if snapshot_fingerprint(*snapshot, plan_request, timezone, db.info.get("user_id")) != request.fingerprint:
             raise DomainError("Replan preview is stale. Request a new preview before applying changes.", 409)
-        result = calculate_replan(*snapshot, plan_request, request.evaluated_at, timezone)
+        result = calculate_replan(*snapshot, plan_request, request.evaluated_at, timezone, owner_id=db.info.get("user_id"))
         if result.fingerprint != request.fingerprint or result.plan_digest != request.plan_digest:
             raise DomainError('Replan preview is stale. Request a new preview before applying changes.', 409)
         current = now()  # Recheck time after loading/calculation, immediately before writes.

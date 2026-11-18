@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, MetaData, Uuid, text
+from sqlalchemy import DateTime, ForeignKey, MetaData, Uuid, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator
 
@@ -45,3 +45,8 @@ class IdentityTimestamps:
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
+
+
+class Owned:
+    # NULL is a deliberately quarantined legacy row, never an authenticated owner.
+    user_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("profiles.user_id", ondelete="CASCADE"), nullable=True, index=True)
