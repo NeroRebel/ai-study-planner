@@ -1,10 +1,10 @@
 import { Sparkles } from "lucide-react";
-import type { AssistantMessageData } from "../../types";
+import type { ChatMessage } from "../../state/assistantStore";
 
 export function AssistantMessage({
   message,
 }: {
-  message: AssistantMessageData;
+  message: ChatMessage;
 }) {
   return (
     <div className={"assistant-message message-" + message.role}>

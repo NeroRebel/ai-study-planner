@@ -31,7 +31,7 @@ function setup(t,readRisk=async()=>json(batch())) {
 }
 function render(component,props={},overrides={}) {
  const state={...createInitialState(),tasks:[task],subjects:[subject],risks:[assessment()],subjectRisks:batch().subjects};
- const value={state,riskStatus:'ready',riskError:'',pending:false,messages:[],summary:selectSummary(state),studyDays:selectDays(state),openTask:()=>{},openSession:()=>{},refreshRisks:async()=>{},...overrides};
+ const value={state,riskStatus:'ready',riskError:'',pending:false,assistant:{messages:[],busy:false,error:"",canRetry:false},assistantStore:{send:async()=>{}},summary:selectSummary(state),studyDays:selectDays(state),openTask:()=>{},openSession:()=>{},refreshRisks:async()=>{},...overrides};
  return renderToStaticMarkup(React.createElement(MemoryRouter,null,React.createElement(AppDataContext.Provider,{value},React.createElement(component,props))));
 }
 test('batch API maps root freshness onto task and subject assessments',async t=>{

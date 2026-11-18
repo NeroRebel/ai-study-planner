@@ -11,3 +11,7 @@ export function isProjectUrl(value:string):boolean {
   try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&!url.search&&!url.hash&&['','/'].includes(url.pathname);}
   catch{return false;}
 }
+
+export function isBackendSecretName(name: string): boolean {
+  return /VITE_.*(SERVICE_ROLE|SECRET|DATABASE|GEMINI.*KEY|OPENAI.*KEY|AI_API_KEY)/i.test(name);
+}

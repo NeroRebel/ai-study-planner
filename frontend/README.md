@@ -70,14 +70,14 @@ Dashboard counts, subject/overall effort progress, task deadlines, reported stud
 
 - Risk is live derived backend data from `GET /api/risks`, not a fixture. One batch powers subjects, task details, Deadlines and Dashboard. Loading/errors are independent of core entities; failed/expired assessments display unavailable with retry. No-active-work results have no risk label.
 - data/prototypeHistoricalAnalytics.ts contains the fixed earlier completion-history points. The chart labels them as historical fixtures; its Current point uses saved task data.
-- services/mockAssistant.ts remains scripted. Replies and action targets read the loaded subjects, tasks, sessions, and deadlines using persisted IDs. Chat text never mutates entities. Suggested actions open the ordinary API-validated editors. Relative Friday references use the current Budapest date.
-- Account profiles are persistent. Study/appearance preferences and scripted chat history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
+- The Assistant uses authenticated FastAPI tools and explicit server-owned confirmation cards. No provider key is used by React; see docs/ai-assistant.md.
+- Account profiles are persistent. Study/appearance preferences and assistant conversation history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
 
-Automatic study-session generation is implemented as an explicit backend action. Unattended automatic replanning, LLM, notifications, external calendar integration, and PDF import remain unimplemented.
+Automatic study-session generation is implemented as an explicit backend action. Unattended automatic replanning, notifications, external calendar integration, and PDF import remain unimplemented.
 
 ## Tests and persistence verification
 
-npm test uses Node's built-in test runner, the existing TypeScript compiler, and mocked HTTP. It never requires FastAPI or Supabase. Tests cover response mapping, initialization and deduplication, pagination, successful mutations and fresh-store loading, server-owned progress and lifecycle effects, rejected writes and visible validation feedback, network recovery, a committed write with failed refresh, loading/error/empty states, timezone/DST serialization, summaries, and scripted responses using persisted IDs.
+npm test uses Node's built-in test runner, the existing TypeScript compiler, and mocked HTTP. It never requires FastAPI or Supabase. Tests cover response mapping, initialization and deduplication, pagination, successful mutations and fresh-store loading, server-owned progress and lifecycle effects, rejected writes and visible validation feedback, network recovery, a committed write with failed refresh, loading/error/empty states, timezone/DST serialization, summaries, and assistant requests, confirmations and account-scoped conversation state.
 
 Live verification for this integration used the running FastAPI service with its configured Supabase database:
 
@@ -104,11 +104,11 @@ Existing manual/generated/history blocks are preserved and count against capacit
 
 ## Deadline risk
 
-The provider refreshes the read-only risk batch after loading/mutations and at its expiry. Obsolete responses are discarded when inputs change. Risk does not alter task/session persistence. See [the policy](../docs/risk-engine.md) for exact thresholds and shared capacity limitations. No LLM is involved; the existing assistant remains scripted.
+The provider refreshes the read-only risk batch after loading/mutations and at its expiry. Obsolete responses are discarded when inputs change. Risk does not alter task/session persistence. See [the policy](../docs/risk-engine.md) for exact thresholds and shared capacity limitations. No LLM is involved; the Assistant uses these authoritative assessments through backend tools.
 
 ## Explicit replanning
 
-Calendar has a Replan button for the displayed week. It requests a read-only preview and shows session moves/additions/removals, affected task risk changes and unscheduled work. Apply changes sends the snapshot/diff version, then refreshes shared entities and risks. Cancel saves nothing. Stale conflicts require a fresh preview; duplicate submissions are disabled. A committed apply followed by refresh failure is not automatically repeated. Existing session editors show planner origin and explain that changing placement makes the block manual. Backend migration `0002_session_origin` must be applied. See [replanning policy](../docs/replanning.md); there is no automatic background replanning or LLM.
+Calendar has a Replan button for the displayed week. It requests a read-only preview and shows session moves/additions/removals, affected task risk changes and unscheduled work. Apply changes sends the snapshot/diff version, then refreshes shared entities and risks. Cancel saves nothing. Stale conflicts require a fresh preview; duplicate submissions are disabled. A committed apply followed by refresh failure is not automatically repeated. Existing session editors show planner origin and explain that changing placement makes the block manual. Backend migration `0002_session_origin` must be applied. See [replanning policy](../docs/replanning.md); there is no automatic background replanning.
 
 
 ## Authentication and profiles
@@ -118,3 +118,7 @@ Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in ignored .env.local, a
 AuthProvider restores identity before protected routes mount. Sign In/Sign Up/Check Email/Forgot Password/Reset Password and /auth/callback implement the email/PKCE and optional Google flows. The centralized API client adds the current bearer token and handles 401 without retries. Planner providers are keyed per identity; unmount clears cached entities, risks and replanning previews and suppresses late responses. Profile requests also reject obsolete account responses.
 
 Settings Account edits the persistent profile, displays Auth email/fixed Budapest timezone, manages private signed-URL avatars and provides sign-out/typed-confirmation account deletion. Other study/appearance preferences remain local. Backend migration 0003 and private avatars bucket policies are required. See [docs/authentication.md](../docs/authentication.md) for exact Supabase/Google/Storage setup, recovery limitations and live two-user acceptance steps. Those provider flows are unit-tested with mocks but were not live-verified without operator-supplied Auth configuration.
+
+## Tool-using Assistant
+
+The existing panel and /assistant page share an account-bound session-local conversation store. api/assistant.ts centralizes message/confirm/cancel requests with the normal bearer token. Changes require Confirm and refresh shared entities/risks after the backend saves them. A read-only replan card also offers Review for Apply, which obtains a validated server-owned confirmation without another model call. Chat/provider errors leave manual planner controls available. No frontend Gemini/OpenAI key is required or permitted. Configure the backend provider and apply migration 0004; see [assistant setup, tools, privacy and live checks](../docs/ai-assistant.md). Conversation text resets on reload/sign-out/account switch; expired/stale proposals require a fresh request.

@@ -76,6 +76,17 @@ export function createAppDataStore(api: AppApi, initialName?: string) {
     // Core pages render before risk finishes. Risk failure never fails entity loading.
     if (snapshot.status === "ready") await refreshRisks(true);
   }
+  async function refreshAfterExternalMutation() {
+    if (disposed) return;
+    cancelReplan();
+    invalidateRisks();
+    // An earlier read may have started before the assistant's committed write.
+    // Wait for it, then request a fresh snapshot rather than reuse stale work.
+    if (loading) await loading;
+    if (disposed) return;
+    await load();
+    if (snapshot.status === "error") throw new Error(snapshot.error);
+  }
   // Forms may hold ORM/read fields. Explicitly whitelist the API write contract.
   function taskPayload(input: Extract<AppAction, { type: "save-task" }>["input"]) {
     const { title, description, subject_id, deadline, estimated_hours, progress, priority, difficulty, status } = input;
@@ -209,7 +220,7 @@ export function createAppDataStore(api: AppApi, initialName?: string) {
     dispose, hasSubscribers: () => listeners.size > 0,
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, dispatch, generatePlan, refreshRisks, previewReplan, applyReplan, cancelReplan,
+    load, refreshAfterExternalMutation, dispatch, generatePlan, refreshRisks, previewReplan, applyReplan, cancelReplan,
     clearMutationError() { publish({ mutationError: "" }); },
   };
 }

@@ -14,14 +14,14 @@ export interface ApiAuth { getAccessToken: () => Promise<string | null>; onUnaut
 export function createApiClient(baseUrl: string, auth?: ApiAuth) {
   const base = baseUrl.replace(/\/$/, "");
   return {
-    async request<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+    async request<T>(path: string, method = "GET", body?: unknown, timeout = 20_000): Promise<T> {
       let response: Response;
       const accessToken = auth ? await auth.getAccessToken() : null;
       if (auth && !accessToken) { auth.onUnauthorized?.(); throw new ApiError("Your session has ended. Please sign in again.", 401); }
       try {
         response = await fetch(base + path, {
           method,
-          signal: AbortSignal.timeout(20_000),
+          signal: AbortSignal.timeout(timeout),
           headers: { Accept: "application/json", ...(body === undefined ? {} : {"Content-Type":"application/json"}),
             ...(accessToken ? {Authorization: `Bearer ${accessToken}`} : {}) },
           body: body === undefined ? undefined : JSON.stringify(body),

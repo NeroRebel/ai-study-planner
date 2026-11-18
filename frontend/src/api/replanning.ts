@@ -18,7 +18,7 @@ export interface ReplanPreview {
   reasons: string[]; warnings: {code: string; date: string | null; detail: string}[];
   risk_before: RiskResponse; risk_after: RiskResponse; applied: boolean;
 }
-function mapPreview(value: ReplanPreview): ReplanPreview {
+export function mapPreview(value: ReplanPreview): ReplanPreview {
   return {...value, sessions_kept: value.sessions_kept.map(mapStudySession),
     sessions_created: value.sessions_created.map(mapStudySession), sessions_removed: value.sessions_removed.map(mapStudySession),
     sessions_moved: value.sessions_moved.map(move => ({...move, before:mapStudySession(move.before), after:mapStudySession(move.after)}))};

@@ -13,7 +13,7 @@ export function AssistantPage() {
       <PageHeader
         eyebrow="A LITTLE GUIDANCE"
         title="AI Assistant"
-        description="Explore your study workload through a scripted, state-aware conversation."
+        description="Plan your study work with guidance grounded in your saved data."
       />
       <div className="assistant-workspace">
         <AssistantPanel full />
@@ -40,10 +40,7 @@ export function AssistantPage() {
           </Panel>
           <Panel title="You stay in control">
             <p className="context-copy">
-              The assistant reads the same tasks and sessions as the rest of
-              this prototype. Suggested actions open the task or calendar
-              editor. Nothing is scheduled, moved, or completed by a chat
-              response.
+              The assistant uses your saved tasks, schedule and deterministic risk assessments. Proposed changes require your confirmation. You can always use the calendar and task editors directly.
             </p>
             <Link className="context-link" to="/calendar">
               Open your calendar →

@@ -14,7 +14,6 @@ const { mapStudySession } = require("../src/api/studySessions.ts");
 const { mapAvailability } = require("../src/api/availability.ts");
 const { selectSummary } = require("../src/state/selectors.ts");
 const { inputToISO, localInput, calendarDate, serializeDeadline } = require("../src/utils/dates.ts");
-const { mockAssistantReply } = require("../src/services/mockAssistant.ts");
 const json = (value, status=200) => new Response(JSON.stringify(value), {status, headers: {"Content-Type":"application/json"}});
 const taskInput = {title:"Research",description:"",subject_id:"subject-uuid",deadline:"2099-01-05T22:59:00Z",
   estimated_hours:5,progress:0,priority:"HIGH",difficulty:"HARD",status:"TODO"};
@@ -177,13 +176,13 @@ test("dashboard summaries use local deadline dates, persisted effort and selecte
   assert.equal(summary.upcomingDeadlines,1);assert.equal(summary.overallProgress,25);
   assert.equal(summary.reportedHours,.5);assert.equal(summary.plannedHours,1);
 });
-test("scripted assistant resolves subjects by persisted UUID and never mutates entities",async t=>{
+test("persistent task context retains UUID-based effort without inferred risk or mutations",async t=>{
   const server=mockServer(t);
   server.entities.subjects=[{id:"subject-uuid",name:"Databases"}];
   server.entities.tasks=[{...taskInput,id:"task-uuid",remaining_hours:3,progress:40}];
   const state=store();await state.load();const before=JSON.stringify(state.getSnapshot().state);
-  assert.match(mockAssistantReply(state.getSnapshot().state,"I did not finish my Database task today"),/Research.*3h remaining/);
-  assert.match(mockAssistantReply(state.getSnapshot().state,"Which deadline is risky?"),/no assessed active tasks/);
+  assert.equal(state.getSnapshot().state.tasks[0].remaining_hours,3);
+  assert.deepEqual(state.getSnapshot().state.risks,[]);
   assert.equal(JSON.stringify(state.getSnapshot().state),before);
 });
 

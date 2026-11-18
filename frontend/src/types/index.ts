@@ -49,11 +49,6 @@ export interface DeadlinePreview {
   risk: RiskLevel;
   due_label: string;
 }
-export interface AssistantMessageData {
-  id: string;
-  role: "assistant" | "user";
-  content: string;
-}
 export interface StudyDay {
   date: string;
   label: string;

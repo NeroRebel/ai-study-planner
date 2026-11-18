@@ -1385,3 +1385,12 @@
   .calendar-expanded .is-short-session .block-task,
   .calendar-expanded .is-short-session .block-status { display: none; }
 }
+
+/* Assistant uses the existing card and action language. */
+.assistant-result { margin: 12px 0 16px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); font-size: 12px; overflow-wrap: anywhere; }
+.assistant-result > summary { cursor: pointer; font-weight: 500; }
+.assistant-result h3 { font-size: 13px; font-weight: 500; text-transform: capitalize; }
+.assistant-confirmation .context-list > div { align-items: start; }
+.assistant-confirmation .context-list dd { max-width: 76%; text-align: left; }
+.assistant-result .detail-list { max-height: 300px; overflow-y: auto; }
+.message-bubble p { white-space: pre-wrap; }

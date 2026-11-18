@@ -141,3 +141,7 @@ Tests for business invariants should accompany their implementation; phase 9 con
 Use this document for product scope, [SPEC.md](SPEC.md) for functional behavior and domain rules, and [DESIGN.md](DESIGN.md) for UX and visual direction. Keep changes consistent across them. These files supersede the introductory conversation as the written baseline.
 
 Working assumptions are documented in SPEC.md. Implemented scheduler and risk policies are documented in docs/scheduler.md and docs/risk-engine.md. Future policy refinements and remaining API contracts must be documented before changing behavior.
+
+## Implemented assistant layer
+
+The backend tool-using Assistant supports Gemini through a provider abstraction. It retrieves authenticated live state and proposes validated actions requiring explicit UI confirmation; deterministic planning policies remain unchanged. OpenAI remains a future adapter. See [docs/ai-assistant.md](docs/ai-assistant.md) for configuration, privacy, safety and actual verification limits.
