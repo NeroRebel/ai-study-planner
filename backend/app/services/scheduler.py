@@ -3,6 +3,7 @@
 Pure calculate_plan() reads snapshots and an explicit evaluation instant. Only
 generate() owns persistence. No task effort, history, or existing session is edited.
 """
+from app.services.common import commit
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, asdict
@@ -218,7 +219,7 @@ def generate(db: Session, request: GeneratePlanRequest, timezone: str) -> Genera
             unscheduled_minutes=sum(task.unscheduled_minutes or 0 for task in plan.tasks),
             tasks=plan.tasks, warnings=plan.warnings,
         )
-        db.commit()
+        commit(db)
         return result
     except Exception:
         db.rollback()

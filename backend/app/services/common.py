@@ -35,3 +35,15 @@ def workspace_key(db: Session) -> int:
 def serialize_read(db: Session) -> None:
     if db.get_bind().dialect.name == "postgresql":
         db.execute(text("SELECT pg_advisory_xact_lock_shared(946321, :key)"), {"key":workspace_key(db)})
+
+
+def commit(db: Session) -> None:
+    """Allow a confirmed assistant command and its receipt to commit atomically.
+
+    Ordinary API services retain their existing commit boundaries. The assistant
+    unit of work flushes here, then commits once with its consumed-action receipt.
+    """
+    if db.info.get("defer_service_commit"):
+        db.flush()
+    else:
+        db.commit()

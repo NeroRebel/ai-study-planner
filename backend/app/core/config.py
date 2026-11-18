@@ -14,6 +14,11 @@ class Settings(BaseSettings):
         hide_input_in_errors=True,
     )
 
+    ai_provider: str = "gemini"
+    ai_model: str = Field(default="", pattern=r"^[A-Za-z0-9._-]*$")
+    gemini_api_key: SecretStr | None = None
+    ai_timeout_seconds: int = Field(default=15, ge=1, le=30)
+
     supabase_url: str = ""
     supabase_publishable_key: SecretStr | None = None
     supabase_service_role_key: SecretStr | None = None

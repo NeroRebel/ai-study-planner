@@ -31,7 +31,7 @@ def db_factory():
 @pytest.fixture
 def application(db_factory):
     # Explicit None wins over any developer DATABASE_URL in the environment.
-    settings = Settings(database_url=None, _env_file=None)
+    settings = Settings(database_url=None, ai_model="", gemini_api_key=None, _env_file=None)
     app = create_app(settings, db_session_factory=db_factory)
     app.dependency_overrides[get_current_user] = lambda: Principal(TEST_USER, "fixture@example.test")
     return app

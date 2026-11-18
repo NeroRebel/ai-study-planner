@@ -7,9 +7,9 @@ from sqlalchemy import event, inspect, text
 from sqlalchemy.orm import Session, with_loader_criteria
 from app.core.exceptions import DomainError
 from app.db.base import Owned
-from app.models import Subject, Task, Availability, StudySession, Profile
+from app.models import Subject, Task, Availability, StudySession, Profile, AssistantAction
 
-MODELS = (Subject, Task, Availability, StudySession, Profile)
+MODELS = (Subject, Task, Availability, StudySession, Profile, AssistantAction)
 
 
 @event.listens_for(Session, 'do_orm_execute')
@@ -27,6 +27,8 @@ def rls_context(session, transaction, connection):
         connection.execute(text("SELECT set_config('request.jwt.claim.sub', :uid, true), set_config('request.jwt.claims', :claims, true)"),
             {'uid':str(owner),'claims':'{"sub":"'+str(owner)+'","role":"authenticated"}'})
         connection.execute(text('SET LOCAL ROLE authenticated'))
+        if session.info.get('assistant_access'):
+            connection.execute(text("SELECT set_config('app.assistant_access', 'on', true)"))
 
 
 @event.listens_for(Session, 'before_flush')

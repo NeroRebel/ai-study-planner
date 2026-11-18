@@ -29,7 +29,7 @@ def create_app(settings: Settings | None = None, *, db_session_factory=None) -> 
 
     application = FastAPI(
         title="AI Study Planner API", version="0.1.0", lifespan=lifespan,
-        description="Authenticated personal study workspaces with deterministic scheduling, risk and preview/apply replanning. No LLM integration.",
+        description="Authenticated personal study workspaces with deterministic scheduling, risk and preview/apply replanning. Tool-using assistant with explicit confirmation.",
     )
     application.state.settings = config
     application.state.session_factory = db_session_factory

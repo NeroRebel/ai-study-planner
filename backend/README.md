@@ -227,7 +227,7 @@ Initial automated verification: 63 pytest tests passed on Python 3.15.0. The dec
 
 The frontend REST adapter and DTO mapping are implemented. Scheduling is an explicit action; task/availability edits still do not trigger automatic replanning. Read-only deterministic risk assessment is implemented; affected-plan reconciliation is available through explicit preview/apply.
 
-No risk values or planning decisions are fabricated by CRUD endpoints. Profiles and per-user authorization are persistent. Study preferences, automatic missed-session detection, unattended replanning and a real assistant endpoint remain unimplemented. These remain later phases. APP_TIMEZONE and profile timezone are currently constrained to Europe/Budapest; changing that requires a separate migration/reinterpretation design.
+No risk values or planning decisions are fabricated by CRUD endpoints. Profiles and per-user authorization are persistent. Study preferences, automatic missed-session detection, unattended replanning remain unimplemented. These remain later phases. APP_TIMEZONE and profile timezone are currently constrained to Europe/Budapest; changing that requires a separate migration/reinterpretation design.
 
 ## Deadline risk assessment
 
@@ -247,3 +247,7 @@ Read [docs/authentication.md](../docs/authentication.md). Set SUPABASE_URL and S
 Migration 0003 adds profiles and nullable legacy ownership, per-user indexes, same-owner parent FKs, Auth-user cascade and restrictive RLS boundaries. Request sessions derive owners only from validated JWTs, scope ORM queries and SET LOCAL ROLE authenticated with local JWT claims on every transaction. Pure planning policies are unchanged. POST bodies never accept user_id. Replanning fingerprints are owner-bound. GET/PATCH /api/profile bootstrap/update the current profile; DELETE /api/account requires confirmation=DELETE and a backend-only admin operation.
 
 Legacy rows stay invisible and are never auto-claimed. A trusted operator may explicitly run `python -m app.claim_legacy --user-id EXISTING_AUTH_USER_UUID --confirm-claim-legacy` after backup/review. Normal tests remain isolated SQLite with controlled identities and mocked Auth/Storage; they never register/delete real Supabase users. See the guide for the unexecuted live two-user acceptance checks and remaining provider configuration.
+
+## Tool-using AI Assistant
+
+Configure server-only AI_PROVIDER=gemini, AI_MODEL and GEMINI_API_KEY in backend/.env and run `alembic upgrade head`. Chat is POST /api/assistant/message; exact stored proposals use POST /api/assistant/actions/{id}/confirm or /cancel with an empty JSON body. Every route is authenticated and owner-scoped. Gemini uses the existing HTTPX dependency; no new SDK is required. OpenAI is not implemented. Pending commands have a five-minute expiry and are saved atomically with execution receipts; migration 0004 adds a protected metadata table, not conversation storage. See [docs/ai-assistant.md](../docs/ai-assistant.md) for the provider contract, tool allowlist, RLS flag, transaction wrapper, retention, privacy, limits and live Gemini/API verification and remaining browser acceptance checks.

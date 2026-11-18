@@ -1,3 +1,4 @@
+from app.services.common import commit
 from types import SimpleNamespace
 from sqlalchemy.orm import Session
 
@@ -28,7 +29,7 @@ def create(db: Session, data, timezone: str):
         raise DomainError("Availability overlaps an existing interval.", 409)
     item = Availability(**data.model_dump())
     db.add(item)
-    db.commit()
+    commit(db)
     db.refresh(item)
     return item
 
@@ -52,7 +53,7 @@ def patch(db: Session, id, data, timezone: str):
         guard_sessions(db, day, windows, timezone)
     for key, value in values.items():
         setattr(item, key, value)
-    db.commit()
+    commit(db)
     db.refresh(item)
     return item
 
@@ -62,4 +63,4 @@ def remove(db: Session, id, timezone: str):
     item = required(db.get(Availability, id), "Availability")
     guard_sessions(db, item.date, [window for window in intervals.availability_on(db, item.date) if window.id != id], timezone)
     db.delete(item)
-    db.commit()
+    commit(db)

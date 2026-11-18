@@ -4,6 +4,7 @@ No ORM object from the input snapshot is changed by calculate_replan(). Allocati
 is exclusively scheduler.calculate_plan(); this module chooses which reservations
 may be released and produces an identity-preserving diff.
 """
+from app.services.common import commit
 import hashlib
 import json
 from collections import defaultdict
@@ -271,7 +272,7 @@ def apply(db: Session, request: ReplanApply, timezone: str) -> ReplanPreview:
             db.add(StudySession(**new.model_dump(exclude={'created_at', 'updated_at'})))
         if result.sessions_removed or result.sessions_moved or result.sessions_created:
             db.flush()
-            db.commit()
+            commit(db)
         result.applied = True
         return result
     except Exception:

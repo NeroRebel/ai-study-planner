@@ -1,3 +1,4 @@
+from app.services.common import commit
 from datetime import UTC
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -81,7 +82,7 @@ def create(db: Session, data):
     required(subjects.get(db, data.subject_id), "Subject")
     item = Task(**task_values(data.model_dump(exclude_none=True)))
     db.add(item)
-    db.commit()
+    commit(db)
     db.refresh(item)
     return item
 
@@ -90,7 +91,7 @@ def patch(db: Session, id, data, timezone: str):
     serialize_write(db)
     item = required(tasks.get(db, id), "Task")
     apply_changes(db, item, data.model_dump(exclude_unset=True), timezone)
-    db.commit()
+    commit(db)
     db.refresh(item)
     return item
 
@@ -100,4 +101,4 @@ def remove(db: Session, id):
     item = required(tasks.get(db, id), "Task")
     # Explicit task deletion also removes its linked study history via the FK.
     db.delete(item)
-    db.commit()
+    commit(db)
