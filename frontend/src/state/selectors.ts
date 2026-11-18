@@ -1,3 +1,4 @@
+import { currentRisk } from "./riskSelectors";
 import type { AppState } from "./appState";
 import { isActive, timeMinutes } from "./appState";
 import { addDays, todayDate, mondayOf, calendarDate } from "../utils/dates";
@@ -61,8 +62,8 @@ export function selectSummary(state: AppState, today = todayDate()) {
     highRiskDeadlines: upcoming.filter((task) =>
       state.risks.some(
         (risk) =>
-          risk.task_id === task.id && !risk.stale &&
-          (risk.level === "HIGH" || risk.level === "CRITICAL"),
+          risk.task_id === task.id && currentRisk(risk) &&
+          risk.level === "HIGH",
       ),
     ).length,
     overallProgress: selectSubjectProgress(state).progress,

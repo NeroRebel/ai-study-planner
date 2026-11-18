@@ -21,9 +21,20 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }]);
   useEffect(() => {
     void store.load();
-    const timer = setInterval(() => setToday(todayDate()), 60_000);
+    const timer = setInterval(() => {
+      setToday(todayDate());
+      const current = store.getSnapshot();
+      if (current.riskStatus === "error" || (current.riskExpiresAt && Date.parse(current.riskExpiresAt) <= Date.now()))
+        void store.refreshRisks();
+    }, 60_000);
     return () => clearInterval(timer);
   }, [store]);
+  useEffect(() => {
+    if (snapshot.riskStatus !== "ready" || !snapshot.riskExpiresAt) return;
+    const delay = Math.max(1000, Math.min(60_000, Date.parse(snapshot.riskExpiresAt) - Date.now() + 50));
+    const timer = setTimeout(() => { void store.refreshRisks(); }, delay);
+    return () => clearTimeout(timer);
+  }, [store, snapshot.riskStatus, snapshot.riskExpiresAt]);
   const summary = useMemo(() => selectSummary(state, today), [state, today]);
   const studyDays = useMemo(() => selectDays(state, undefined, today), [state, today]);
   // Stable functions prevent route effects from repeatedly opening dialogs.
@@ -36,7 +47,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setMessages(previous => [...previous, { id: crypto.randomUUID(), role, content }]);
   }
   return <AppDataContext.Provider value={{ ...snapshot, ...actions,
-    generatePlan: store.generatePlan, dispatch: store.dispatch, clearMutationError: store.clearMutationError,
+    refreshRisks: store.refreshRisks, generatePlan: store.generatePlan, dispatch: store.dispatch, clearMutationError: store.clearMutationError,
     summary, studyDays, taskDialog, sessionDialog, messages, addMessage,
   }}>{children}</AppDataContext.Provider>;
 }

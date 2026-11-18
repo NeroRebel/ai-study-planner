@@ -29,6 +29,7 @@ function mockServer(t) {
     if (fail) return fail(url,options);
     const parsed = new URL(url), [group,id] = parsed.pathname.slice(5).split("/");
     const method = options.method || "GET", data = options.body && JSON.parse(options.body);
+    if (group === "risks") return json({tasks:[],subjects:[],evaluated_at:"2026-11-17T10:00:00Z",expires_at:"2099-01-01T00:00:00Z"});
     const list = entities[group];
     if (method === "GET") return id ? json(list.find(item => item.id === id)) :
       json(list.slice(Number(parsed.searchParams.get("offset") || 0), Number(parsed.searchParams.get("offset") || 0)+500));
@@ -61,7 +62,8 @@ test("loads the four collections once in parallel, deduplicates initialization, 
   assert.deepEqual(state.getSnapshot().state.tasks,[]);
   let notices=0;const unsubscribe=state.subscribe(()=>notices++);
   await Promise.all([state.load(),state.load()]);
-  assert.equal(server.calls.length,4);
+  assert.equal(server.calls.length,5);
+  assert.equal(server.calls.filter(call => call.url.includes("/api/risks")).length,1);
   assert.equal(state.getSnapshot().status,"ready");
   assert.deepEqual(state.getSnapshot().state.risks,[]);
   assert.ok(notices);unsubscribe();

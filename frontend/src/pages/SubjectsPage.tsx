@@ -5,13 +5,14 @@ import { useAppData } from "../hooks/useAppData";
 import { PageHeader } from "../components/common/PageHeader";
 import { Modal } from "../components/common/Modal";
 import { FormField } from "../components/common/FormField";
+import { TaskRisk } from "../components/common/LiveRisk";
 import { SubjectCard } from "../components/subjects/SubjectCard";
 import { ProgressBar } from "../components/common/ProgressBar";
 import { EmptyState } from "../components/common/EmptyState";
 import { selectSubjectProgress } from "../state/selectors";
 import { isActive } from "../state/appState";
 import { formatDate, statusLabels } from "../utils/format";
-import type { SubjectColor } from "../types";
+import type { SubjectColor, Task } from "../types";
 
 export function SubjectsPage() {
   const { state, dispatch, openTask, openSession, pending } = useAppData();
@@ -87,25 +88,7 @@ export function SubjectsPage() {
           </div>
           <h3 className="detail-heading">Active tasks & upcoming deadlines</h3>
           {active.length ? (
-            <ul className="detail-list">
-              {active.map((task) => (
-                <li key={task.id}>
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      setSelected(null);
-                      openTask(task.id);
-                    }}
-                  >
-                    {task.title}
-                  </button>
-                  <span>
-                    {formatDate(task.deadline)} ·{" "}
-                    {task.remaining_hours.toFixed(1)}h left
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <SubjectDeadlineList tasks={active} onOpen={(id) => { setSelected(null); openTask(id); }} />
           ) : (
             <EmptyState
               title="No active tasks"
@@ -211,4 +194,12 @@ export function SubjectsPage() {
       )}
     </div>
   );
+}
+
+// Shared with the subject details modal; assessments remain provider-owned.
+export function SubjectDeadlineList({ tasks, onOpen }: { tasks: Task[]; onOpen: (id: string) => void }) {
+  return <ul className="detail-list">{tasks.map(task => <li key={task.id}>
+    <button className="text-button" onClick={() => onOpen(task.id)}>{task.title}</button>
+    <span>{formatDate(task.deadline)} · {task.remaining_hours.toFixed(1)}h left · <TaskRisk taskId={task.id} /></span>
+  </li>)}</ul>;
 }

@@ -32,7 +32,7 @@ backend/
 
 Request flow: React → FastAPI route → business service → SQLAlchemy → Supabase PostgreSQL. Routes validate input and delegate mutations to services. Repositories contain simple queries. Each application instance owns one pooled engine; request sessions are dependency-injected and closed after use, rolling back uncommitted work on errors. Startup does not create tables, migrate, or seed.
 
-No deadline-risk engine, automatic replanning, AI calls, authentication, ownership, Supabase SDK, Storage, Realtime, or Edge Functions are implemented. There is one demo workspace; a future ownership migration can add user IDs to the four core resources. No user table or authorization mechanism is prematurely introduced.
+No automatic replanning, AI calls, authentication, ownership, Supabase SDK, Storage, Realtime, or Edge Functions are implemented. There is one demo workspace; a future ownership migration can add user IDs to the four core resources. No user table or authorization mechanism is prematurely introduced.
 
 ## Environment and dependencies
 
@@ -225,6 +225,10 @@ Initial automated verification: 63 pytest tests passed on Python 3.15.0. The dec
 
 ## Next phase and limitations
 
-The frontend REST adapter and DTO mapping are implemented. Scheduling is an explicit action; task/availability edits still do not trigger automatic replanning. Later phases can add the deterministic risk engine and affected-plan reconciliation separately.
+The frontend REST adapter and DTO mapping are implemented. Scheduling is an explicit action; task/availability edits still do not trigger automatic replanning. Read-only deterministic risk assessment is implemented; affected-plan reconciliation remains a future phase.
 
 No risk values or planning decisions are fabricated by CRUD endpoints. There is no User/profile/preferences persistence, authorization, automatic missed-session detection, automatic replanning, or assistant endpoint. These remain later phases. Updating APP_TIMEZONE after entering local sessions requires a deliberate migration/reinterpretation policy; keep it stable for the demo workspace.
+
+## Deadline risk assessment
+
+`GET /api/risks` returns a single read-only batch of LOW/MEDIUM/HIGH task assessments and subject summaries with reasons, explanations and freshness metadata. No schema migration is needed. It uses canonical remaining effort and the scheduler's shared Budapest/DST-safe capacity utilities; it does not generate sessions or change progress. See [docs/risk-engine.md](../docs/risk-engine.md) for exact thresholds, competing-demand accounting and limitations. Tests use the existing isolated database strategy.

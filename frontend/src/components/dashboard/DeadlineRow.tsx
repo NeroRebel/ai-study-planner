@@ -3,12 +3,11 @@ import type { Task } from "../../types";
 import { useAppData } from "../../hooks/useAppData";
 import { formatDate } from "../../utils/format";
 import { dueLabel } from "../../utils/dates";
-import { RiskBadge } from "../common/RiskBadge";
+import { TaskRisk } from "../common/LiveRisk";
 import { PriorityBadge } from "../common/PriorityBadge";
 export function DeadlineRow({ task }: { task: Task }) {
   const { state, openTask } = useAppData();
   const subject = state.subjects.find((item) => item.id === task.subject_id)!;
-  const risk = state.risks.find((item) => item.task_id === task.id);
   return (
     <tr>
       <td>
@@ -30,16 +29,7 @@ export function DeadlineRow({ task }: { task: Task }) {
         <PriorityBadge priority={task.priority} />
       </td>
       <td>
-        {risk ? (
-          <>
-            <RiskBadge level={risk.level} />
-            {risk.stale && (
-              <span className="table-subtitle">Sample · needs review</span>
-            )}
-          </>
-        ) : (
-          <span className="table-subtitle">Not assessed</span>
-        )}
+        <TaskRisk taskId={task.id} />
       </td>
     </tr>
   );

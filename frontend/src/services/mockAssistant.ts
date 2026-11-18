@@ -1,3 +1,4 @@
+import { currentRisk } from "../state/riskSelectors";
 import type { AppState } from "../state/appState";
 import { isActive } from "../state/appState";
 import { dueLabel, hours, nextFriday, todayDate } from "../utils/dates";
@@ -13,15 +14,15 @@ export function mockAssistantReply(state: AppState, text: string) {
   const active = state.tasks.filter(isActive);
   const lower = text.toLowerCase();
   if (lower.includes("risk") || lower.includes("deadline")) {
-    const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+    const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
     const risks = state.risks
-      .filter((risk) => active.some((task) => task.id === risk.task_id))
-      .sort((a, b) => order[a.level] - order[b.level]);
+      .filter((risk) => currentRisk(risk) && risk.level !== null && active.some((task) => task.id === risk.task_id))
+      .sort((a, b) => order[a.level!] - order[b.level!]);
     const risk = risks[0],
       task = active.find((task) => task.id === risk?.task_id);
     return task && risk
       ? task.title +
-          " has the highest sample risk: " +
+          " has the highest assessed risk: " +
           risk.level +
           ". " +
           dueLabel(task.deadline) +
@@ -30,10 +31,8 @@ export function mockAssistantReply(state: AppState, text: string) {
           " remaining, " +
           task.progress +
           "% complete. " +
-          (risk.stale
-            ? "Its inputs have changed, so this sample assessment needs reassessment."
-            : "This is a fixture assessment, not a live prediction.")
-      : "There are no assessed active tasks. New tasks are not assessed in this prototype.";
+          risk.explanation
+      : "There are no assessed active tasks. Refresh the risk assessment to try again.";
   }
   if (
     lower.includes("did not") ||
@@ -95,5 +94,5 @@ export function mockAssistantReply(state: AppState, text: string) {
       " Open Calendar to review or add blocks. I do not generate or optimize a schedule."
     );
   }
-  return "This is a scripted prototype. Try a suggested question about today's focus, sample deadline risks, unfinished work, or moving a Thesis block. Use the action buttons to make explicit saved edits.";
+  return "This is a scripted prototype. Try a suggested question about today's focus, deadline risks, unfinished work, or moving a Thesis block. Use the action buttons to make explicit saved edits.";
 }

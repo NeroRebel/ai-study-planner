@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { GraduationCap, Sparkles, Menu } from "lucide-react";
+import { RiskNotice } from "../common/LiveRisk";
 import { DataBoundary } from "../common/DataBoundary";
 import { Sidebar } from "./Sidebar";
 import { mobileNavigation, navigation } from "./navigation";
@@ -64,6 +65,7 @@ export function AppLayout() {
         <main id="main-content" tabIndex={-1} ref={mainRef}>
           {mutationError && <div className="data-notice form-error" role="alert">{mutationError}
             <button className="text-button" onClick={clearMutationError}>Dismiss</button></div>}
+          {["/", "/tasks", "/subjects", "/deadlines"].includes(pathname) && <RiskNotice />}
           {pending && <div className="data-notice" role="status">Saving and refreshing your workspace…</div>}
           {pathname === "/settings" ? <Outlet /> : <DataBoundary><Outlet /></DataBoundary>}
           {status === "ready" && <div className="data-refresh"><button className="text-button" disabled={pending} onClick={retry}>Refresh data</button></div>}

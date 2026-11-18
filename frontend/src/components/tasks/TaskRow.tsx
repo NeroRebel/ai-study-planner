@@ -1,16 +1,13 @@
 import { subjectColorStyle } from "../../utils/colors";
 import type { Task } from "../../types";
 import { useAppData } from "../../hooks/useAppData";
-import { RiskBadge } from "../common/RiskBadge";
+import { TaskRisk } from "../common/LiveRisk";
 import { statusLabels } from "../../utils/format";
 import { isActive } from "../../state/appState";
 import { hours } from "../../utils/dates";
 export function TaskRow({ task }: { task: Task }) {
   const { state, dispatch, openTask, pending } = useAppData();
   const subject = state.subjects.find((item) => item.id === task.subject_id)!;
-  const risk = isActive(task)
-    ? state.risks.find((item) => item.task_id === task.id)
-    : undefined;
   return (
     <li className="task-row">
       <input
@@ -32,9 +29,9 @@ export function TaskRow({ task }: { task: Task }) {
         </div>
       </div>
       <div className="task-trailing">
-        {risk && <RiskBadge level={risk.level} />}
+        <TaskRisk taskId={task.id} />
         <span className="task-status">
-          {risk?.stale ? "Needs reassessment" : statusLabels[task.status]}
+          {statusLabels[task.status]}
         </span>
       </div>
       <span className="task-duration">

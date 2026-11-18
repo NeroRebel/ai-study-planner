@@ -2,7 +2,7 @@ import { subjectColorStyle } from "../../utils/colors";
 import type { Task } from "../../types";
 import { useAppData } from "../../hooks/useAppData";
 import { ProgressBar } from "../common/ProgressBar";
-import { RiskBadge } from "../common/RiskBadge";
+import { TaskRisk } from "../common/LiveRisk";
 import { PriorityBadge } from "../common/PriorityBadge";
 import { formatDate, statusLabels } from "../../utils/format";
 import { isActive } from "../../state/appState";
@@ -10,9 +10,6 @@ import { isActive } from "../../state/appState";
 export function TaskCard({ task }: { task: Task }) {
   const { state, dispatch, openTask, pending } = useAppData();
   const subject = state.subjects.find((item) => item.id === task.subject_id)!;
-  const risk = isActive(task)
-    ? state.risks.find((item) => item.task_id === task.id)
-    : undefined;
   return (
     <article className="task-prototype-card">
       <div className="record-title">
@@ -34,13 +31,7 @@ export function TaskCard({ task }: { task: Task }) {
       </div>
       <div className="record-badges">
         <PriorityBadge priority={task.priority} />
-        {risk ? (
-          <RiskBadge level={risk.level} />
-        ) : (
-          <span className="muted">
-            {isActive(task) ? "Not assessed" : "No active risk"}
-          </span>
-        )}
+        <TaskRisk taskId={task.id} />
         <span>{statusLabels[task.status]}</span>
       </div>
       <div className="record-progress">
@@ -53,7 +44,6 @@ export function TaskCard({ task }: { task: Task }) {
       </div>
       <div className="record-footer">
         <span>{task.remaining_hours.toFixed(1)}h remaining</span>
-        {risk?.stale && <small>Sample risk · needs reassessment</small>}
         <button className="text-button" onClick={() => openTask(task.id)}>
           View details →
         </button>

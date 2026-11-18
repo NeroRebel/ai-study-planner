@@ -17,10 +17,13 @@ import { StudyLoad } from "../components/dashboard/StudyLoad";
 import { AssistantPanel } from "../components/assistant/AssistantPanel";
 import { currentWeek, weekLabel, TIMEZONE } from "../utils/dates";
 import { useAppData } from "../hooks/useAppData";
+import { currentRisk } from "../state/riskSelectors";
 import { hours } from "../utils/dates";
 
 export function DashboardPage() {
-  const { state, summary: stats } = useAppData();
+  const { state, summary: stats, riskStatus } = useAppData();
+  const riskReady = riskStatus === "ready" && state.risks.every(currentRisk);
+  const highCount = state.risks.filter(risk => currentRisk(risk) && risk.level === "HIGH").length;
   return (
     <div className="dashboard-layout">
       <div className="dashboard-main">
@@ -33,7 +36,7 @@ export function DashboardPage() {
             <p>
               Here's your study overview.{" "}
               <span>
-                Risk assessment is not available yet.
+                {riskReady ? `${highCount} high-risk deadlines need attention.` : riskStatus === "loading" ? "Checking deadline risks…" : "Risk assessment is unavailable."}
               </span>
             </p>
           </div>
@@ -71,7 +74,7 @@ export function DashboardPage() {
           <StatCard
             label="Upcoming deadlines"
             value={String(stats.upcomingDeadlines)}
-            detail="Next 7 days · risk not assessed"
+            detail={riskReady ? `Next 7 days · ${stats.highRiskDeadlines} high risk` : "Next 7 days · risk unavailable"}
             icon={BookOpen}
             color="blue"
             to="/deadlines"

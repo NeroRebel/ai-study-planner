@@ -43,7 +43,7 @@ Use a spacing scale based on 4 px, commonly 8, 12, 16, 24, and 32 px. Cards gene
 
 ### Semantic presentation
 
-Risk badges always include text: LOW, MEDIUM, HIGH, or CRITICAL. Suggested treatments are neutral/green for LOW, muted gold for MEDIUM, pink/red for HIGH, and a stronger red border/icon and explicit urgency for CRITICAL. Subject color must not obscure risk color. Task status and session status use the exact domain meanings from SPEC.md, with human-readable labels such as “In progress” and “Partially completed”.
+Risk badges always include text: LOW, MEDIUM, or HIGH. Suggested treatments are neutral/green for LOW, muted gold for MEDIUM, pink/red for HIGH. Subject color must not obscure risk color. Task status and session status use the exact domain meanings from SPEC.md, with human-readable labels such as “In progress” and “Partially completed”.
 
 ## 3. Desktop layout
 

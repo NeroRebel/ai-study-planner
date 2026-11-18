@@ -5,32 +5,31 @@ generate() owns persistence. No task effort, history, or existing session is edi
 """
 from collections import defaultdict
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import InvalidOperation
-from functools import lru_cache
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import DomainError
 from app.models import Availability, StudySession, Task
-from app.models.enums import Difficulty, Priority, StudySessionStatus, TaskStatus
+from app.models.enums import StudySessionStatus, TaskStatus
 from app.schemas.common import minute_hours
 from app.schemas.scheduler import (
     GeneratePlanRequest, GeneratePlanResult, PlanningWarning, TaskAllocation,
 )
 from app.schemas.study_session import StudySessionRead
 from app.services.common import now, serialize_write
-from app.services.time_rules import interval, local_instant
+from app.services.time_rules import interval
+from app.services.planning_capacity import (
+    PRIORITY_ORDER, DIFFICULTY_ORDER, available_slots, clock_minute, clock_at, free_runs, task_order_key,
+)
 
 TARGET_MINUTES = 60
 MIN_USEFUL_MINUTES = 30
 MAX_CREATED_SESSIONS = 1000
-PRIORITY_ORDER = {Priority.HIGH: 0, Priority.MEDIUM: 1, Priority.LOW: 2}
-DIFFICULTY_ORDER = {Difficulty.HARD: 0, Difficulty.MEDIUM: 1, Difficulty.EASY: 2}
 
 
 @dataclass(frozen=True)
@@ -49,32 +48,6 @@ class Plan:
     warnings: list[PlanningWarning]
 
 
-def clock_minute(clock: time) -> int:
-    if clock.tzinfo is not None or clock.second or clock.microsecond:
-        raise DomainError("Existing intervals must use whole-minute local times.", 409)
-    return clock.hour * 60 + clock.minute
-
-
-def clock_at(minute: int) -> time:
-    return time(minute // 60, minute % 60)
-
-
-def free_runs(slots: dict[date, set[int]]) -> list[tuple[date, int, int]]:
-    runs = []
-    for day in sorted(slots):
-        start = previous = None
-        for minute in sorted(slots[day]):
-            if previous is not None and minute != previous + 1:
-                runs.append((day, start, previous + 1))
-                start = None
-            if start is None:
-                start = minute
-            previous = minute
-        if start is not None:
-            runs.append((day, start, previous + 1))
-    return runs
-
-
 def calculate_plan(
     tasks: Sequence[Task],
     availability: Sequence[Availability],
@@ -86,35 +59,9 @@ def calculate_plan(
     if evaluated_at.tzinfo is None or evaluated_at.utcoffset() is None:
         raise ValueError("The scheduler requires an explicit timezone-aware evaluation instant.")
     evaluated_at = evaluated_at.astimezone(UTC)
-    zone = ZoneInfo(timezone)
-    slots: dict[date, set[int]] = defaultdict(set)
-    warnings: list[PlanningWarning] = []
-    dst_days: set[date] = set()
-
-    @lru_cache(maxsize=None)
-    def boundary(day: date, minute: int) -> datetime | None:
-        try:
-            return local_instant(day, clock_at(minute), timezone)
-        except DomainError:
-            return None
-
-    # A safe minute has two uniquely resolvable local boundaries and 60 elapsed
-    # seconds. This reuses CRUD's DST policy and never guesses a repeated time.
-    for window in availability:
-        if not request.date_from <= window.date <= request.date_to:
-            continue
-        first, last = clock_minute(window.start_time), clock_minute(window.end_time)
-        if last <= first:
-            warnings.append(PlanningWarning(code="INVALID_AVAILABILITY", date=window.date,
-                                             detail="An invalid availability window was skipped."))
-            continue
-        for minute in range(first, last):
-            start, end = boundary(window.date, minute), boundary(window.date, minute + 1)
-            if start is None or end is None or end - start != timedelta(minutes=1):
-                dst_days.add(window.date)
-                continue
-            if start >= evaluated_at:
-                slots[window.date].add(minute)
+    slots, shared_warnings, boundary = available_slots(
+        availability, evaluated_at, timezone, request.date_from, request.date_to)
+    warnings = [PlanningWarning(**asdict(warning)) for warning in shared_warnings]
 
     reserved: dict[UUID, int] = defaultdict(int)
     reservation_conflicts: set[UUID] = set()
@@ -143,10 +90,6 @@ def calculate_plan(
                 isinstance(deadline, datetime) and deadline.tzinfo is not None and end > deadline
             ):
                 reservation_conflicts.add(task.id)
-
-    for day in sorted(dst_days):
-        warnings.append(PlanningWarning(code="DST_TIME_SKIPPED", date=day,
-            detail="Ambiguous, nonexistent, or discontinuous local minutes were left unscheduled."))
 
     allocations: dict[UUID, TaskAllocation] = {}
     candidates: list[tuple[Task, int, datetime]] = []
@@ -186,10 +129,7 @@ def calculate_plan(
     # Same local due date = comparable urgency. Within that day: explicit priority,
     # exact deadline, shortest unreserved effort, difficulty, then opaque task ID.
     # Difficulty is only a final suitability tie-breaker; it never inflates effort.
-    candidates.sort(key=lambda row: (
-        row[2].astimezone(zone).date(), PRIORITY_ORDER[row[0].priority],
-        row[2], row[1], DIFFICULTY_ORDER[row[0].difficulty], str(row[0].id),
-    ))
+    candidates.sort(key=lambda row: task_order_key(row[0], row[1], timezone))
     proposals: list[ProposedSession] = []
     limited = False
     for task, needed, deadline in candidates:

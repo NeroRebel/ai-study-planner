@@ -5,21 +5,53 @@ import { createInitialState } from "./appState";
 import type { AppAction, AppState } from "./appState";
 
 export interface DataSnapshot {
+  riskStatus: "loading" | "ready" | "error"; riskError: string; riskExpiresAt: string | null;
   generating: boolean; generationResult: GeneratePlanResult | null; generationError: string;
   generationRange: GeneratePlanInput | null;
   state: AppState; status: "loading" | "ready" | "error";
   error: string; mutationError: string; pending: boolean;
 }
 export function createAppDataStore(api: AppApi) {
-  let snapshot: DataSnapshot = { generating: false, generationResult: null, generationError: "", generationRange: null, state: createInitialState(), status: "loading", error: "", mutationError: "", pending: false };
+  let snapshot: DataSnapshot = { riskStatus: "loading", riskError: "", riskExpiresAt: null, generating: false, generationResult: null, generationError: "", generationRange: null, state: createInitialState(), status: "loading", error: "", mutationError: "", pending: false };
   const listeners = new Set<() => void>();
   let loading: Promise<void> | null = null;
+  let riskRevision = 0;
+  let riskRequest: { revision: number; promise: Promise<void> } | null = null;
   function publish(change: Partial<DataSnapshot>) {
     snapshot = { ...snapshot, ...change };
     listeners.forEach(listener => listener());
   }
+  function invalidateRisks() {
+    riskRevision++;
+    riskRequest = null;
+    publish({ riskStatus: "loading", riskError: "", state: { ...snapshot.state,
+      risks: snapshot.state.risks.map(risk => ({ ...risk, stale: true })),
+      subjectRisks: snapshot.state.subjectRisks.map(risk => ({ ...risk, stale: true })),
+    } });
+  }
+  async function refreshRisks(force = false): Promise<void> {
+    if (snapshot.status !== "ready" || (snapshot.pending && !force)) return;
+    if (riskRequest?.revision === riskRevision) return riskRequest.promise;
+    const revision = riskRevision;
+    publish({ riskStatus: "loading", riskError: "" });
+    const promise = (async () => {
+      try {
+        const result = await api.risks.read();
+        if (revision !== riskRevision) return;
+        publish({ riskStatus: "ready", riskError: "", riskExpiresAt: result.expires_at,
+          state: { ...snapshot.state, risks: result.tasks, subjectRisks: result.subjects } });
+      } catch (error) {
+        if (revision !== riskRevision) return;
+        publish({ riskStatus: "error", riskError: errorMessage(error), riskExpiresAt: null,
+          state: { ...snapshot.state, risks: [], subjectRisks: [] } });
+      } finally { if (riskRequest?.revision === revision) riskRequest = null; }
+    })();
+    riskRequest = { revision, promise };
+    return promise;
+  }
   async function load() {
     if (loading) return loading;
+    invalidateRisks();
     loading = (async () => {
       try {
         const [subjects, tasks, availability, sessions] = await Promise.all([
@@ -31,7 +63,9 @@ export function createAppDataStore(api: AppApi) {
         publish({ status: "error", error: errorMessage(error) });
       } finally { loading = null; }
     })();
-    return loading;
+    await loading;
+    // Core pages render before risk finishes. Risk failure never fails entity loading.
+    if (snapshot.status === "ready") await refreshRisks(true);
   }
   // Forms may hold ORM/read fields. Explicitly whitelist the API write contract.
   function taskPayload(input: Extract<AppAction, { type: "save-task" }>["input"]) {
@@ -46,6 +80,8 @@ export function createAppDataStore(api: AppApi) {
     if (snapshot.pending || loading) return "Please wait for the current request to finish.";
     if (snapshot.status !== "ready") return "Load your workspace before making changes.";
     publish({ pending: true, mutationError: "" });
+    invalidateRisks();
+    let failed = false;
     try {
       switch (action.type) {
         case "save-task": {
@@ -87,31 +123,39 @@ export function createAppDataStore(api: AppApi) {
         case "delete-session": await api.sessions.remove(action.id); break;
       }
       // Include server-side effects (task closure/session removal and atomic outcomes).
-      publish({ state: { ...snapshot.state, risks: snapshot.state.risks.map(risk => ({ ...risk, stale: true })) } });
       await load();
       return null; // Write succeeded even if refresh failed; don't invite duplicate POSTs.
     } catch (error) {
+      failed = true;
       const message = errorMessage(error);
       publish({ mutationError: message });
       return message;
-    } finally { publish({ pending: false }); }
+    } finally {
+      publish({ pending: false });
+      if (failed) await refreshRisks();
+    }
   }
   async function generatePlan(input: GeneratePlanInput): Promise<void> {
     if (snapshot.pending || loading || snapshot.status !== "ready") return;
     publish({ pending: true, generating: true, generationResult: null, generationError: "", generationRange: input });
+    invalidateRisks();
+    let failed = false;
     try {
       const result = await api.planner.generate(input);
-      publish({ generationResult: result, state: { ...snapshot.state,
-        risks: snapshot.state.risks.map(risk => ({ ...risk, stale: true })) } });
+      publish({ generationResult: result });
       await load(); // Reuse the normal shared refresh, including the committed sessions.
     } catch (error) {
+      failed = true;
       publish({ generationError: errorMessage(error) });
-    } finally { publish({ pending: false, generating: false }); }
+    } finally {
+      publish({ pending: false, generating: false });
+      if (failed) await refreshRisks();
+    }
   }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, dispatch, generatePlan,
+    load, dispatch, generatePlan, refreshRisks,
     clearMutationError() { publish({ mutationError: "" }); },
   };
 }

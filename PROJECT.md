@@ -63,7 +63,7 @@ AI Study Planner's intended differentiation is its focused combination of academ
 | Availability | Enter dated periods available for studying. |
 | Weekly planner | View study sessions in a weekly calendar. |
 | Automatic scheduling | Generate non-overlapping sessions within availability and before deadlines where feasible. |
-| Deadline risk | Calculate and explain LOW, MEDIUM, HIGH, and CRITICAL risk. |
+| Deadline risk | Calculate and explain LOW, MEDIUM, and HIGH risk. |
 | Automatic replanning | Adjust affected future sessions after missed work or changed constraints. |
 | Dashboard and progress | Present study time, task completion, workload, subject progress, and priorities. |
 | AI assistant | Answer from backend state and invoke predefined, validated application actions. |
@@ -140,4 +140,4 @@ Tests for business invariants should accompany their implementation; phase 9 con
 
 Use this document for product scope, [SPEC.md](SPEC.md) for functional behavior and domain rules, and [DESIGN.md](DESIGN.md) for UX and visual direction. Keep changes consistent across them. These files supersede the introductory conversation as the written baseline.
 
-Working assumptions are documented in SPEC.md. Final scheduling weights, risk thresholds, block-duration defaults, and exact API schemas remain open. Resolve and document them before implementing the corresponding engine or contract.
+Working assumptions are documented in SPEC.md. Implemented scheduler and risk policies are documented in docs/scheduler.md and docs/risk-engine.md. Future policy refinements and remaining API contracts must be documented before changing behavior.

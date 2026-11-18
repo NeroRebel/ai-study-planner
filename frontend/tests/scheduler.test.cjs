@@ -32,6 +32,7 @@ async function setup(t, generate) {
       return response;
     }
     if(failRefresh)throw new TypeError("offline");
+    if(url.includes("/api/risks"))return json({tasks:[],subjects:[],evaluated_at:"2026-11-17T10:00:00Z",expires_at:"2099-01-01T00:00:00Z"});
     return json(url.includes("/study-sessions")?sessions:[]);
   };
   t.after(()=>{global.fetch=before;});
@@ -92,7 +93,8 @@ test("backend validation errors display without replacing the existing calendar"
   const {store}=await setup(t,async()=>json({detail:"Choose an inclusive planning range of 1–31 days."},422));
   const before=store.getSnapshot().state;
   await store.generatePlan(range());
-  assert.equal(store.getSnapshot().state,before);
+  assert.equal(store.getSnapshot().state.sessions,before.sessions);
+  assert.equal(store.getSnapshot().state.tasks,before.tasks);
   assert.equal(store.getSnapshot().generationResult,null);
   assert.match(renderPlanner(store),/planning range/);
   assert.equal(store.getSnapshot().pending,false);

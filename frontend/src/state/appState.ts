@@ -1,7 +1,6 @@
-import type { Subject, Task, StudySession, Availability, DeadlineRisk, Priority,
+import type { Subject, Task, StudySession, Availability, DeadlineRisk, SubjectRisk, Priority,
   Difficulty, TaskStatus, StudySessionStatus } from "../types";
 import type { SubjectInput } from "../api/subjects";
-import { prototypeRiskAssessments } from "../data/prototypeRiskAssessments";
 
 export interface Preferences {
   name: string; program: string; university: string; sessionMinutes: number;
@@ -10,7 +9,7 @@ export interface Preferences {
 }
 export interface AppState {
   subjects: Subject[]; tasks: Task[]; sessions: StudySession[]; availability: Availability[];
-  risks: DeadlineRisk[]; preferences: Preferences;
+  risks: DeadlineRisk[]; subjectRisks: SubjectRisk[]; preferences: Preferences;
 }
 export interface TaskInput {
   title: string; description: string; subject_id: string; deadline: string;
@@ -34,7 +33,7 @@ export type AppAction =
   | { type: "preferences"; value: Preferences };
 export function createInitialState(): AppState {
   return { subjects: [], tasks: [], sessions: [], availability: [],
-    risks: prototypeRiskAssessments.map(value => ({ ...value, stale: true })),
+    risks: [], subjectRisks: [],
     preferences: { name: "Alex Morgan", program: "Computer Science", university: "Danube University",
       sessionMinutes: 60, breakMinutes: 15, startTime: "09:00", endTime: "20:00",
       splitTasks: true, earliestFirst: true, avoidEvenings: true, appearance: "light" } };

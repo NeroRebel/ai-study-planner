@@ -4,9 +4,9 @@ import { useAppData } from "../../hooks/useAppData";
 import { RequestError } from "../common/RequestError";
 import { Modal } from "../common/Modal";
 import { FormField } from "../common/FormField";
-import { RiskBadge } from "../common/RiskBadge";
+import { TaskRisk } from "../common/LiveRisk";
 import { inputToISO, localInput, serializeDeadline, todayDate, addDays } from "../../utils/dates";
-import { validateTask, isActive } from "../../state/appState";
+import { validateTask } from "../../state/appState";
 import type { TaskInput } from "../../state/appState";
 import type { Priority, Difficulty, TaskStatus } from "../../types";
 
@@ -60,7 +60,6 @@ export function TaskDialog({ id }: { id: string }) {
     if (result) { setError(result); return; }
     openTask(null);
   }
-  const risk = task && isActive(task) ? state.risks.find((item) => item.task_id === id) : undefined;
   if (id !== "new" && !task)
     return (
       <Modal title="Task not found" onClose={() => openTask(null)}>
@@ -83,7 +82,7 @@ export function TaskDialog({ id }: { id: string }) {
                 ?.name
             }
           </span>
-          {risk && <RiskBadge level={risk.level} />}
+          <TaskRisk taskId={task.id} />
           <span>{task.remaining_hours.toFixed(1)}h remaining</span>
         </div>
       )}

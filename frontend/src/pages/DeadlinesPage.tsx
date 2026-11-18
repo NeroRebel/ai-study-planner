@@ -5,28 +5,30 @@ import { useAppData } from "../hooks/useAppData";
 import { isActive } from "../state/appState";
 import { PageHeader } from "../components/common/PageHeader";
 import { MetricCard } from "../components/common/MetricCard";
-import { RiskBadge } from "../components/common/RiskBadge";
+import { TaskRisk } from "../components/common/LiveRisk";
+import { currentRisk } from "../state/riskSelectors";
 import { ProgressBar } from "../components/common/ProgressBar";
 import { EmptyState } from "../components/common/EmptyState";
 import { dueLabel, hours } from "../utils/dates";
 import { formatDate } from "../utils/format";
 
 export function DeadlinesPage() {
-  const { state, summary, openTask } = useAppData();
+  const { state, summary, openTask, riskStatus } = useAppData();
+  const riskReady = riskStatus === "ready" && state.risks.every(currentRisk);
   const [filter, setFilter] = useState("ALL");
   const active = state.tasks.filter(isActive);
   const tasks = [...active]
     .filter(
       (task) =>
         filter === "ALL" ||
-        state.risks.find((risk) => risk.task_id === task.id)?.level === filter,
+        state.risks.find((risk) => currentRisk(risk) && risk.task_id === task.id)?.level === filter,
     )
     .sort((a, b) => a.deadline.localeCompare(b.deadline));
   const risky = active.filter((task) =>
     state.risks.some(
       (risk) =>
         risk.task_id === task.id &&
-        (risk.level === "HIGH" || risk.level === "CRITICAL"),
+        currentRisk(risk) && risk.level === "HIGH",
     ),
   ).length;
   return (
@@ -45,8 +47,8 @@ export function DeadlinesPage() {
         />
         <MetricCard
           label="High-risk deadlines"
-          value={state.risks.length ? String(risky) : "Not assessed"}
-          detail="HIGH + CRITICAL · sample assessments"
+          value={riskReady ? String(risky) : riskStatus === "loading" ? "Checking…" : "Unavailable"}
+          detail="Live backend assessments"
           icon={TriangleAlert}
         />
         <MetricCard
@@ -73,28 +75,28 @@ export function DeadlinesPage() {
             onChange={(event) => setFilter(event.target.value)}
           >
             <option value="ALL">All levels</option>
-            {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((level) => (
+            {["LOW", "MEDIUM", "HIGH"].map((level) => (
               <option key={level}>{level}</option>
             ))}
           </select>
         </label>
       </div>
       <p className="sample-disclaimer">
-        Task details are saved data. Risk and usable capacity have not been assessed.
-        Any prototype assessment is labeled and marked stale after changes.
+        Risk is assessed from remaining work, planned sessions and free availability.
+        Capacity margins may be shared between tasks and must not be added together.
       </p>
       <div className="deadline-cards">
         {tasks.map((task) => {
           const subject = state.subjects.find(
             (item) => item.id === task.subject_id,
           )!;
-          const risk = state.risks.find((item) => item.task_id === task.id);
+          const risk = state.risks.find((item) => currentRisk(item) && item.task_id === task.id);
           return (
             <article
               key={task.id}
               className={
                 "deadline-detail-card " +
-                (risk ? "deadline-" + risk.level.toLowerCase() : "")
+                (risk?.level ? "deadline-" + risk.level.toLowerCase() : "")
               }
             >
               <div className="deadline-card-heading">
@@ -110,11 +112,7 @@ export function DeadlinesPage() {
                     {task.title}
                   </button>
                 </div>
-                {risk ? (
-                  <RiskBadge level={risk.level} />
-                ) : (
-                  <span className="status-badge">Not assessed</span>
-                )}
+                <TaskRisk taskId={task.id} />
               </div>
               <dl className="deadline-facts">
                 <div>
@@ -131,11 +129,7 @@ export function DeadlinesPage() {
                 <div>
                   <dt>Usable before deadline</dt>
                   <dd>
-                    {risk
-                      ? risk.stale
-                        ? "Needs reassessment"
-                        : hours(risk.available_hours)
-                      : "Not assessed"}
+                    {risk ? hours(risk.capacity_minutes / 60) : "Unavailable"}
                   </dd>
                 </div>
                 <div>
@@ -150,11 +144,7 @@ export function DeadlinesPage() {
               />
               <div className="record-footer">
                 <span>
-                  {risk?.stale
-                    ? "Edited since the sample assessment"
-                    : risk
-                      ? "Sample assessed Oct 28 · Europe/Budapest"
-                      : "No risk assessment available"}
+                  {risk?.explanation ?? "Risk assessment is unavailable."}
                 </span>
                 <button
                   className="text-button"

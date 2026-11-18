@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAppData } from "../../hooks/useAppData";
+import { TaskRisk } from "../common/LiveRisk";
 import { isActive } from "../../state/appState";
 import {
   mockAssistantReply,
@@ -24,7 +25,6 @@ export function AssistantPanel({ full = false }: { full?: boolean }) {
   const previousMessageCount = useRef(messages.length);
   const active = state.tasks.filter(isActive);
   const task = active.find((item) => state.subjects.some(subject => subject.id === item.subject_id && subject.name.toLowerCase().includes("management"))) ?? active[0];
-  const risk = state.risks.find((item) => item.task_id === task?.id);
   useEffect(() => {
     const content = contentRef.current;
     if (content && messages.length > previousMessageCount.current)
@@ -92,8 +92,7 @@ export function AssistantPanel({ full = false }: { full?: boolean }) {
           <div className="risk-warning">
             <span className="warning-title">
               <AlertTriangle size={15} />
-              {risk ? risk.level + " prototype assessment" : "Deadline · not assessed"}
-              {risk?.stale ? " · needs reassessment" : ""}
+              <TaskRisk taskId={task.id} />
             </span>
             <strong>{task.title}</strong>
             <span>{dueLabel(task.deadline)}</span>

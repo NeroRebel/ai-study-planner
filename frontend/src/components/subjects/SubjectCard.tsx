@@ -6,6 +6,7 @@ import { selectSubjectProgress } from "../../state/selectors";
 import { isActive } from "../../state/appState";
 import { ProgressBar } from "../common/ProgressBar";
 import { formatDate } from "../../utils/format";
+import { RiskValue } from "../common/LiveRisk";
 import { hours } from "../../utils/dates";
 
 export function SubjectCard({
@@ -65,6 +66,7 @@ export function SubjectCard({
         Next deadline{" "}
         <strong>{next ? formatDate(next.deadline) : "All caught up"}</strong>
       </span>
+      <span className="subject-next">Risk <RiskValue assessment={state.subjectRisks.find(item => item.subject_id === subject.id)} /></span>
     </button>
   );
 }

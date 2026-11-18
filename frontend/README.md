@@ -68,12 +68,12 @@ Dashboard counts, subject/overall effort progress, task deadlines, reported stud
 
 ## Remaining prototype features
 
-- data/prototypeRiskAssessments.ts is explicitly non-authoritative and currently empty. Backend UUID tasks display Not assessed. No fixture is assigned by task title or guessed ID. Any future sample snapshot is stale and remains labeled.
+- Risk is live derived backend data from `GET /api/risks`, not a fixture. One batch powers subjects, task details, Deadlines and Dashboard. Loading/errors are independent of core entities; failed/expired assessments display unavailable with retry. No-active-work results have no risk label.
 - data/prototypeHistoricalAnalytics.ts contains the fixed earlier completion-history points. The chart labels them as historical fixtures; its Current point uses saved task data.
 - services/mockAssistant.ts remains scripted. Replies and action targets read the loaded subjects, tasks, sessions, and deadlines using persisted IDs. Chat text never mutates entities. Suggested actions open the ordinary API-validated editors. Relative Friday references use the current Budapest date.
 - Profile/settings preferences and chat history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
 
-Automatic study-session generation is implemented as an explicit backend action. Calculated risk, automatic replanning, LLM, authentication, notifications, external calendar integration, and PDF import remain unimplemented.
+Automatic study-session generation is implemented as an explicit backend action. Automatic replanning, LLM, authentication, notifications, external calendar integration, and PDF import remain unimplemented.
 
 ## Tests and persistence verification
 
@@ -101,3 +101,7 @@ The existing single-profile backend has no authentication. Settings/profile pers
 The expanded weekly planner calls POST /api/planner/generate through api/planner.ts and the shared data store. The selected week determines the inclusive date range. The button and week controls are disabled while generating; all persisted collections refresh after success so generated blocks appear immediately. Partial results show the number of tasks that could not fit, unscheduled minutes, and reasons without treating a saved partial plan as an API failure. Errors retain the current calendar. A committed result is retained if refresh fails; Retry loading never reposts generation.
 
 Existing manual/generated/history blocks are preserved and count against capacity and remaining reservations. Pressing Generate again fills only missing work. There is no frontend scheduling algorithm, destructive regeneration, or new dependency. See [scheduler documentation](../docs/scheduler.md) for the exact backend policy.
+
+## Deadline risk
+
+The provider refreshes the read-only risk batch after loading/mutations and at its expiry. Obsolete responses are discarded when inputs change. Risk does not alter task/session persistence. See [the policy](../docs/risk-engine.md) for exact thresholds and shared capacity limitations. No LLM is involved; the existing assistant remains scripted.

@@ -8,7 +8,7 @@ import { EmptyState } from "../components/common/EmptyState";
 import { TaskCard } from "../components/tasks/TaskCard";
 import { ProgressBar } from "../components/common/ProgressBar";
 import { PriorityBadge } from "../components/common/PriorityBadge";
-import { RiskBadge } from "../components/common/RiskBadge";
+import { TaskRisk } from "../components/common/LiveRisk";
 import { formatDate, statusLabels } from "../utils/format";
 import { isActive } from "../state/appState";
 
@@ -134,7 +134,7 @@ export function TasksPage() {
       <div className="section-caption">
         <span>{tasks.length} tasks</span>
         <span>
-          Changes are saved to server · risk not assessed
+          Changes are saved to server · risk assessed by backend
         </span>
       </div>
       {!tasks.length ? (
@@ -169,9 +169,6 @@ export function TasksPage() {
                     const item = state.subjects.find(
                       (subject) => subject.id === task.subject_id,
                     )!;
-                    const risk = isActive(task)
-                      ? state.risks.find((risk) => risk.task_id === task.id)
-                      : undefined;
                     return (
                       <tr key={task.id}>
                         <td>
@@ -215,20 +212,7 @@ export function TasksPage() {
                         </td>
                         <td>{task.remaining_hours.toFixed(1)}h</td>
                         <td>
-                          {risk ? (
-                            <>
-                              <RiskBadge level={risk.level} />
-                              {risk.stale && (
-                                <small className="table-subtitle">
-                                  Needs reassessment
-                                </small>
-                              )}
-                            </>
-                          ) : (
-                            <span className="muted">
-                              {isActive(task) ? "Not assessed" : "—"}
-                            </span>
-                          )}
+                          <TaskRisk taskId={task.id} />
                         </td>
                         <td>
                           <span

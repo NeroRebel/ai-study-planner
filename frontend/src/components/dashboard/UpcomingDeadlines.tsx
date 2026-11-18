@@ -16,7 +16,7 @@ export function UpcomingDeadlines({ full = false }: { full?: boolean }) {
       <div className="table-scroll">
         <table>
           <caption className="sr-only">
-            Current task deadlines and sample risk assessments
+            Current task deadlines and live risk assessments
           </caption>
           <thead>
             <tr>

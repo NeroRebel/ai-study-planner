@@ -148,7 +148,7 @@ The primary UI displays a week. Generation accepts an explicit interval; risk an
 8. Return unallocated work and clear reasons if the constraints cannot be satisfied. Never overbook to conceal an infeasible request.
 9. Use stable tie-breaking for equivalent tasks. The same snapshot, configuration, interval, and evaluation time must produce equivalent allocations without duplicates on repeat requests.
 
-The first implemented scheduling policy is greedy-v1, specified in [docs/scheduler.md](docs/scheduler.md): local due-date urgency, explicit priority, exact deadline, unreserved effort, difficulty, and task ID establish a stable ordering. It adds 60-minute target blocks to safe available time while preserving every existing session. Future policy refinements require a documented version and must preserve these invariants; the risk and replanning engines remain separate future phases.
+The first implemented scheduling policy is greedy-v1, specified in [docs/scheduler.md](docs/scheduler.md): local due-date urgency, explicit priority, exact deadline, unreserved effort, difficulty, and task ID establish a stable ordering. It adds 60-minute target blocks to safe available time while preserving every existing session. Future policy refinements require a documented version and must preserve these invariants; the risk engine remains read-only and separate from future replanning.
 
 ### Outputs and acceptance
 
@@ -158,22 +158,21 @@ Acceptance scenarios include two competing deadlines, equal-ranked tasks, no ava
 
 ## 6. Deadline risk engine
 
-The backend assigns LOW, MEDIUM, HIGH, or CRITICAL risk to active tasks. Risk is a deterministic assessment, not a probability or LLM opinion.
+The backend assigns LOW, MEDIUM, or HIGH risk to active tasks. Risk is a deterministic assessment, not a probability or LLM opinion.
 
 | Level | Intended meaning |
 | --- | --- |
 | LOW | Sufficient feasible capacity with comfortable slack under the configured policy. |
 | MEDIUM | Feasible work with limited slack or growing time pressure. |
 | HIGH | Serious capacity pressure or likely shortfall requiring attention. |
-| CRITICAL | Overdue unfinished work or an immediate/severe feasibility problem under the configured policy. |
 
 Inputs include remaining hours, usable hours before deadline, progress, deadline proximity, priority, existing reservations, and competing active tasks. Progress must be interpreted consistently with remaining effort rather than counted as a separate deduction.
 
 Capacity must not be promised independently in full to every task. Evaluate competing demand with the planning engine's consistent allocation model. Explain whether reported capacity is free time or time already allocated to that task; unrelated reservations cannot be counted as free time. Evaluate risk through the deadline, not only through the visible week.
 
-For example, a report due in three days with eight hours remaining and only three usable hours has a five-hour shortfall and warrants HIGH or CRITICAL risk. The exact boundary between those levels, along with slack and proximity thresholds, must be defined and tested during the risk-engine phase. This initial document does not prescribe a final scoring formula.
+For example, a report due in three days with eight hours remaining and only three usable hours has a five-hour shortfall and warrants HIGH risk. The implemented capacity-v1 thresholds and accounting rules are specified in [docs/risk-engine.md](docs/risk-engine.md).
 
-Completed and cancelled tasks have no active risk. Overdue active tasks are CRITICAL. Missing availability is treated as zero entered capacity and explained; missing or invalid inputs produce a validation issue rather than a fabricated LOW result.
+Completed and cancelled tasks have no active risk. Overdue active tasks are HIGH. Missing availability is treated as zero entered capacity and explained; missing or invalid inputs produce a validation issue rather than a fabricated LOW result.
 
 Recalculate risk after relevant task, availability, or session changes and when time advances enough to change the assessment. Store or return the evaluation time so stale data can be identified. Acceptance includes competing tasks, zero capacity, deadline boundaries, progress updates, overdue work, and reproducible results for identical inputs.
 
@@ -291,7 +290,7 @@ Use realistic academic subjects and a fixed reference week for reproducible fixt
 | Statistics | Problem set | +7 days | 4 / 4 | MEDIUM | MEDIUM | 0% |
 | Diploma Thesis | Literature review | +14 days | 10 / 8 | MEDIUM | HARD | 20% |
 
-Include several evening availability windows, one completed session, one missed session, and one partial outcome with consistent task effort. Supply separate feasible and constrained scenarios. In the constrained scenario, change the report to a deadline in three days with eight hours remaining and three usable hours; display a five-hour shortfall and HIGH or CRITICAL risk according to the eventual policy.
+Include several evening availability windows, one completed session, one missed session, and one partial outcome with consistent task effort. Supply separate feasible and constrained scenarios. In the constrained scenario, change the report to a deadline in three days with eight hours remaining and three usable hours; display a five-hour shortfall and HIGH risk according to the eventual policy.
 
 Do not present hand-authored mock allocations as computed results. Keep a fixed evaluation instant for automated fixtures and use relative fixture generation for a live demo if needed.
 
