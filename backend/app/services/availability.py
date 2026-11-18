@@ -14,7 +14,9 @@ def guard_sessions(db: Session, day, windows, timezone: str):
     for session in intervals.sessions_on(db, day):
         if session.status != StudySessionStatus.PLANNED:
             continue
-        _, end, _ = interval(session.date, session.start_time, session.end_time, timezone)
+        start, end, _ = interval(session.date, session.start_time, session.end_time, timezone)
+        if session.origin == "SCHEDULER" and start >= now():
+            continue  # Retain invalid generated work until explicit preview/apply.
         if end > now() and not covers(windows, session.start_time, session.end_time):
             raise DomainError("Availability change would invalidate a planned session. Edit or remove that session first.", 409)
 

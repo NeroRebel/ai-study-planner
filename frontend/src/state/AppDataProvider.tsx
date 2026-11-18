@@ -47,6 +47,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setMessages(previous => [...previous, { id: crypto.randomUUID(), role, content }]);
   }
   return <AppDataContext.Provider value={{ ...snapshot, ...actions,
+    previewReplan: store.previewReplan, applyReplan: store.applyReplan, cancelReplan: store.cancelReplan,
     refreshRisks: store.refreshRisks, generatePlan: store.generatePlan, dispatch: store.dispatch, clearMutationError: store.clearMutationError,
     summary, studyDays, taskDialog, sessionDialog, messages, addMessage,
   }}>{children}</AppDataContext.Provider>;

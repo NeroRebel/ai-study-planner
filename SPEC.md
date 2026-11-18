@@ -83,6 +83,7 @@ Availability describes capacity, not a reservation or completed study time. A da
 | planned_minutes | Positive duration, equal to the elapsed duration of the scheduled interval. |
 | completed_minutes | Reported actual study time, initially zero. |
 | status | PLANNED, COMPLETED, MISSED, or PARTIALLY_COMPLETED. |
+| origin | MANUAL or SCHEDULER. Legacy rows are MANUAL; explicit user placement is protected. |
 
 PLANNED is a future or ongoing reservation. COMPLETED means the planned session was finished; MISSED has zero completed minutes; PARTIALLY_COMPLETED has more than zero but less than planned_minutes. The initial MVP records completed_minutes between zero and planned_minutes; extra work is recorded separately through a task progress update, without inventing extra historical sessions.
 
@@ -177,6 +178,8 @@ Completed and cancelled tasks have no active risk. Overdue active tasks are HIGH
 Recalculate risk after relevant task, availability, or session changes and when time advances enough to change the assessment. Store or return the evaluation time so stale data can be identified. Acceptance includes competing tasks, zero capacity, deadline boundaries, progress updates, overdue work, and reproducible results for identical inputs.
 
 ## 7. Automatic replanning
+
+The first implementation is explicit preview/apply (`affected-v1`), documented in [docs/replanning.md](docs/replanning.md). No CRUD edit automatically runs the replanner. Future generated reservations may await approved repair after constraints change; manual/ongoing guard rules remain enforced. Preview is read-only, Apply revalidates a snapshot/diff fingerprint, and only affected future planner-managed sessions inside the requested horizon may change. Fully automatic reconciliation below remains a later extension.
 
 Replanning coordinates the existing planning and risk engines. It must preserve history, count only remaining work, and limit changes to affected future allocations and dependent conflicts.
 

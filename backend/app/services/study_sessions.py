@@ -70,6 +70,8 @@ def save(db: Session, data, timezone: str, id=None):
     item = old or StudySession()
     for key, value in values.items():
         setattr(item, key, value)
+    if structural_change:
+        item.origin = "MANUAL"  # An explicit user placement is no longer planner-managed.
     db.add(item)
     db.flush()
     if remaining is not None:

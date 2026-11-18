@@ -56,17 +56,20 @@ def apply_changes(db: Session, item: Task, data: dict, timezone: str) -> Task:
         start, end, _ = interval(session.date, session.start_time, session.end_time, timezone)
         if end > current:
             relevant.append((session, start, end))
+    # Generated future reservations are repaired only after an approved preview.
+    fixed = [(session, start, end) for session, start, end in relevant
+             if session.origin != "SCHEDULER" or start < current]
     if values["status"] in {TaskStatus.COMPLETED, TaskStatus.CANCELLED}:
         if any(start < current for _, start, _ in relevant):
             raise DomainError("Record the ongoing study session outcome before closing this task.", 409)
         # Lifecycle cleanup only; no sessions are moved or generated.
-        for session, _, _ in relevant:
+        for session, _, _ in fixed:
             db.delete(session)
     else:
         deadline = values.get("deadline", item.deadline)
-        if any(end > deadline for _, _, end in relevant):
+        if any(end > deadline for _, _, end in fixed):
             raise DomainError("Update or remove planned sessions that exceed the revised deadline first.", 409)
-        if sum(session.planned_minutes for session, _, _ in relevant) > minute_hours(values["remaining_hours"]):
+        if sum(session.planned_minutes for session, _, _ in fixed) > minute_hours(values["remaining_hours"]):
             raise DomainError("Update or remove planned sessions that exceed remaining effort first.", 409)
     for key, value in values.items():
         setattr(item, key, value)

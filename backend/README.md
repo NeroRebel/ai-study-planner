@@ -164,12 +164,12 @@ All resources include id, created_at, and updated_at. UUIDs and timestamps are g
 - Remaining effort is authoritative. If only progress is supplied, it is converted to remaining minutes. Progress is a rounded integer, clamped below 100 when work remains. Contradictory explicit progress/remaining values are rejected.
 - A status-only COMPLETED update sets remaining effort to zero and progress to 100; conflicting explicit values are rejected. Zero remaining effort completes a non-cancelled task. Partial progress normally yields IN_PROGRESS. CANCELLED retains its recorded effort/progress.
 - Changing the total estimate alone preserves remaining effort and recalculates progress. No scheduling is triggered.
-- Completing/cancelling removes only future PLANNED reservations; recorded history remains. An ongoing session must receive its outcome first. Changes to deadlines/effort that would invalidate future reservations are rejected until the caller manually edits/removes those reservations.
+- Completing/cancelling retains future SCHEDULER reservations for approved replanning; the existing manual lifecycle cleanup preserves recorded history. An ongoing session must receive its outcome first. Changes invalidating manual/ongoing reservations are rejected; generated future blocks await explicit Replan preview/apply.
 - Explicit task DELETE also deletes its linked sessions through the foreign key; this is different from completing/cancelling a task.
 
 Enums: Priority LOW/MEDIUM/HIGH; Difficulty EASY/MEDIUM/HARD; TaskStatus TODO/IN_PROGRESS/COMPLETED/CANCELLED.
 
-**Availability:** date, start_time, end_time. End must follow start on the same date. Times are local, minute-aligned, without UTC offsets. Overnight intervals must be split across dates. Same-date overlaps return 409; adjacent intervals are allowed. A change/delete that would uncover a current/future PLANNED session is rejected rather than moving the session.
+**Availability:** date, start_time, end_time. End must follow start on the same date. Times are local, minute-aligned, without UTC offsets. Overnight intervals must be split across dates. Same-date overlaps return 409; adjacent intervals are allowed. A change/delete that would uncover a manual or ongoing PLANNED session is rejected. Future generated blocks are preserved for explicit repair.
 
 **StudySession:** task_id, date, start_time, end_time, planned_minutes, completed_minutes, status.
 
@@ -225,10 +225,16 @@ Initial automated verification: 63 pytest tests passed on Python 3.15.0. The dec
 
 ## Next phase and limitations
 
-The frontend REST adapter and DTO mapping are implemented. Scheduling is an explicit action; task/availability edits still do not trigger automatic replanning. Read-only deterministic risk assessment is implemented; affected-plan reconciliation remains a future phase.
+The frontend REST adapter and DTO mapping are implemented. Scheduling is an explicit action; task/availability edits still do not trigger automatic replanning. Read-only deterministic risk assessment is implemented; affected-plan reconciliation is available through explicit preview/apply.
 
 No risk values or planning decisions are fabricated by CRUD endpoints. There is no User/profile/preferences persistence, authorization, automatic missed-session detection, automatic replanning, or assistant endpoint. These remain later phases. Updating APP_TIMEZONE after entering local sessions requires a deliberate migration/reinterpretation policy; keep it stable for the demo workspace.
 
 ## Deadline risk assessment
 
 `GET /api/risks` returns a single read-only batch of LOW/MEDIUM/HIGH task assessments and subject summaries with reasons, explanations and freshness metadata. No schema migration is needed. It uses canonical remaining effort and the scheduler's shared Budapest/DST-safe capacity utilities; it does not generate sessions or change progress. See [docs/risk-engine.md](../docs/risk-engine.md) for exact thresholds, competing-demand accounting and limitations. Tests use the existing isolated database strategy.
+
+## Affected-plan replanning
+
+Run `alembic upgrade head` before starting this version. Revision `0002_session_origin` adds constrained MANUAL/SCHEDULER origin metadata; all legacy rows remain MANUAL. New generation writes SCHEDULER, manual placement writes MANUAL, and user changes to task/date/time transfer a block to MANUAL. Request bodies cannot set origin.
+
+`POST /api/planner/replan/preview` takes date_from/date_to (up to 31 days) and optional task_ids. `POST /api/planner/replan/apply` takes the same scope plus evaluated_at, fingerprint and plan_digest from the preview. Preview is read-only; Apply revalidates under the existing workspace lock, rejects stale/expired previews with 409 and atomically applies only the diff. No-op Apply writes nothing. See [docs/replanning.md](../docs/replanning.md) for preservation, deterministic displacement, risk comparison and scope limits. No service automatically invokes replanning on ordinary CRUD.

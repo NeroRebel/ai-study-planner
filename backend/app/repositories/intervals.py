@@ -17,8 +17,13 @@ def list_all(db: Session, model, *, date_from=None, date_to=None, task_id=None,
     return db.scalars(statement.order_by(model.date, model.start_time, model.id).offset(offset).limit(limit)).all()
 
 
+def overlap_conditions(day, start, end, other_day, other_start, other_end):
+    """One half-open overlap rule for SQL queries and read-only plan snapshots."""
+    return day == other_day, start < other_end, end > other_start
+
+
 def overlapping(db: Session, model, day, start, end, exclude_id=None) -> bool:
-    statement = select(model.id).where(model.date == day, model.start_time < end, model.end_time > start)
+    statement = select(model.id).where(*overlap_conditions(model.date, model.start_time, model.end_time, day, start, end))
     if exclude_id is not None:
         statement = statement.where(model.id != exclude_id)
     return db.scalar(statement.limit(1)) is not None

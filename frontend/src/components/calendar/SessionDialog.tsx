@@ -53,6 +53,7 @@ export function SessionDialog({ request }: { request: SessionDialogRequest }) {
       title={session ? "Study block details" : "Add study block"}
       onClose={() => openSession(null)}
     >
+      {session?.origin === "SCHEDULER" && <p className="form-note">Planner-managed block. Changing its task, date or time makes it manual and protects your placement from replanning.</p>}
       {historicalClosed ? (
         <>
           <div className="detail-summary">

@@ -34,6 +34,7 @@ export interface Availability {
   end_time: string;
 }
 export interface StudySession {
+  origin: "MANUAL" | "SCHEDULER";
   id: string;
   task_id: string;
   date: string;

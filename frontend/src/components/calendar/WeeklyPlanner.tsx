@@ -6,11 +6,12 @@ import { useAppData } from "../../hooks/useAppData";
 import { selectDays } from "../../state/selectors";
 import { timeMinutes } from "../../state/appState";
 import { addDays, mondayOf, weekLabel } from "../../utils/dates";
+import { ReplanDialog } from "./ReplanDialog";
 import { PlannerFeedback } from "./PlannerFeedback";
 import { StudyBlock } from "./StudyBlock";
 
 export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
-  const { state, openSession, pending, generating, generatePlan, generationResult, generationError, generationRange } = useAppData();
+  const { state, openSession, pending, generating, generatePlan, generationResult, generationError, generationRange, previewReplan, replanStatus, replanMessage } = useAppData();
   const [week, setWeek] = useState(currentWeek());
   const [selectedDate, setSelectedDate] = useState(todayDate());
   const days = selectDays(state, week);
@@ -108,7 +109,12 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
             onClick={() => { void generatePlan({ date_from: week, date_to: addDays(week, 6) }); }}>
             {generating ? "Generating study plan…" : "Generate study plan"}
           </button>
+          <button type="button" className="button" disabled={pending}
+            onClick={() => { void previewReplan({ date_from: week, date_to: addDays(week, 6) }); }}>
+            {replanStatus === "previewing" ? "Preparing preview…" : "Replan"}
+          </button>
           <button
+            disabled={pending}
             className="text-button"
             onClick={() => openSession({ id: "new", date: selectedDate })}
           >
@@ -118,6 +124,8 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
           </div>
         </div>
       )}
+      {expanded && <ReplanDialog />}
+      {expanded && replanMessage && <p className="data-notice" role="status">{replanMessage}</p>}
       {expanded && generationRange?.date_from === week && <PlannerFeedback
         result={generationResult} error={generationError} tasks={state.tasks} />}
       <div

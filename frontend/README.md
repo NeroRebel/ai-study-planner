@@ -73,7 +73,7 @@ Dashboard counts, subject/overall effort progress, task deadlines, reported stud
 - services/mockAssistant.ts remains scripted. Replies and action targets read the loaded subjects, tasks, sessions, and deadlines using persisted IDs. Chat text never mutates entities. Suggested actions open the ordinary API-validated editors. Relative Friday references use the current Budapest date.
 - Profile/settings preferences and chat history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
 
-Automatic study-session generation is implemented as an explicit backend action. Automatic replanning, LLM, authentication, notifications, external calendar integration, and PDF import remain unimplemented.
+Automatic study-session generation is implemented as an explicit backend action. Unattended automatic replanning, LLM, authentication, notifications, external calendar integration, and PDF import remain unimplemented.
 
 ## Tests and persistence verification
 
@@ -105,3 +105,7 @@ Existing manual/generated/history blocks are preserved and count against capacit
 ## Deadline risk
 
 The provider refreshes the read-only risk batch after loading/mutations and at its expiry. Obsolete responses are discarded when inputs change. Risk does not alter task/session persistence. See [the policy](../docs/risk-engine.md) for exact thresholds and shared capacity limitations. No LLM is involved; the existing assistant remains scripted.
+
+## Explicit replanning
+
+Calendar has a Replan button for the displayed week. It requests a read-only preview and shows session moves/additions/removals, affected task risk changes and unscheduled work. Apply changes sends the snapshot/diff version, then refreshes shared entities and risks. Cancel saves nothing. Stale conflicts require a fresh preview; duplicate submissions are disabled. A committed apply followed by refresh failure is not automatically repeated. Existing session editors show planner origin and explain that changing placement makes the block manual. Backend migration `0002_session_origin` must be applied. See [replanning policy](../docs/replanning.md); there is no automatic background replanning or LLM.

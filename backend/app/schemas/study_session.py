@@ -1,6 +1,7 @@
 from datetime import date as DateValue, time as TimeValue
 from decimal import Decimal
 from uuid import UUID
+from typing import Literal
 
 from pydantic import Field, field_validator
 
@@ -37,6 +38,7 @@ class StudySessionPatch(PatchSchema):
 
 
 class StudySessionRead(Record):
+    origin: Literal["MANUAL", "SCHEDULER"]
     task_id: UUID
     date: DateValue
     start_time: TimeValue

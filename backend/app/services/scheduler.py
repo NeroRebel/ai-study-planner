@@ -202,7 +202,7 @@ def generate(db: Session, request: GeneratePlanRequest, timezone: str) -> Genera
         # week so they cannot be allocated again in a second week.
         sessions = list(db.scalars(select(StudySession)))
         plan = calculate_plan(tasks, windows, sessions, request, evaluated_at, timezone)
-        created = [StudySession(task_id=item.task_id, date=item.date,
+        created = [StudySession(origin="SCHEDULER", task_id=item.task_id, date=item.date,
             start_time=item.start_time, end_time=item.end_time, planned_minutes=item.planned_minutes,
             completed_minutes=0, status=StudySessionStatus.PLANNED) for item in plan.sessions]
         db.add_all(created)

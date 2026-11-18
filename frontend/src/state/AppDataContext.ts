@@ -5,7 +5,10 @@ import type { AppAction, AppState } from "./appState";
 import type { AssistantMessageData } from "../types";
 import type { selectSummary, selectDays } from "./selectors";
 export interface SessionDialogRequest { id: string; task_id?: string; date?: string; }
-export interface AppDataContextValue extends Pick<DataSnapshot, "generating" | "generationResult" | "generationError" | "generationRange" | "riskStatus" | "riskError" | "riskExpiresAt"> {
+export interface AppDataContextValue extends Pick<DataSnapshot, "generating" | "generationResult" | "generationError" | "generationRange" | "replanStatus" | "replanPreview" | "replanError" | "replanMessage" | "replanRange" | "riskStatus" | "riskError" | "riskExpiresAt"> {
+  previewReplan: (input: GeneratePlanInput) => Promise<void>;
+  applyReplan: () => Promise<void>;
+  cancelReplan: () => void;
   refreshRisks: () => Promise<void>;
   generatePlan: (input: GeneratePlanInput) => Promise<void>;
   state: AppState;

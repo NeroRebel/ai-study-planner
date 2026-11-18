@@ -1,3 +1,4 @@
+import type { ReplanPreview } from "../api/replanning";
 import type { GeneratePlanInput, GeneratePlanResult } from "../api/planner";
 import type { AppApi } from "../api";
 import { errorMessage } from "../api/client";
@@ -5,6 +6,9 @@ import { createInitialState } from "./appState";
 import type { AppAction, AppState } from "./appState";
 
 export interface DataSnapshot {
+  replanStatus: "idle" | "previewing" | "ready" | "applying" | "applied" | "error";
+  replanPreview: ReplanPreview | null; replanError: string; replanMessage: string;
+  replanRange: GeneratePlanInput | null;
   riskStatus: "loading" | "ready" | "error"; riskError: string; riskExpiresAt: string | null;
   generating: boolean; generationResult: GeneratePlanResult | null; generationError: string;
   generationRange: GeneratePlanInput | null;
@@ -12,7 +16,7 @@ export interface DataSnapshot {
   error: string; mutationError: string; pending: boolean;
 }
 export function createAppDataStore(api: AppApi) {
-  let snapshot: DataSnapshot = { riskStatus: "loading", riskError: "", riskExpiresAt: null, generating: false, generationResult: null, generationError: "", generationRange: null, state: createInitialState(), status: "loading", error: "", mutationError: "", pending: false };
+  let snapshot: DataSnapshot = { replanStatus: "idle", replanPreview: null, replanError: "", replanMessage: "", replanRange: null, riskStatus: "loading", riskError: "", riskExpiresAt: null, generating: false, generationResult: null, generationError: "", generationRange: null, state: createInitialState(), status: "loading", error: "", mutationError: "", pending: false };
   const listeners = new Set<() => void>();
   let loading: Promise<void> | null = null;
   let riskRevision = 0;
@@ -51,6 +55,7 @@ export function createAppDataStore(api: AppApi) {
   }
   async function load() {
     if (loading) return loading;
+    if (snapshot.replanStatus === "ready") cancelReplan();
     invalidateRisks();
     loading = (async () => {
       try {
@@ -79,6 +84,7 @@ export function createAppDataStore(api: AppApi) {
     }
     if (snapshot.pending || loading) return "Please wait for the current request to finish.";
     if (snapshot.status !== "ready") return "Load your workspace before making changes.";
+    cancelReplan();
     publish({ pending: true, mutationError: "" });
     invalidateRisks();
     let failed = false;
@@ -137,6 +143,7 @@ export function createAppDataStore(api: AppApi) {
   }
   async function generatePlan(input: GeneratePlanInput): Promise<void> {
     if (snapshot.pending || loading || snapshot.status !== "ready") return;
+    cancelReplan();
     publish({ pending: true, generating: true, generationResult: null, generationError: "", generationRange: input });
     invalidateRisks();
     let failed = false;
@@ -152,10 +159,42 @@ export function createAppDataStore(api: AppApi) {
       if (failed) await refreshRisks();
     }
   }
+  function cancelReplan() {
+    if (snapshot.replanStatus === "applying" || snapshot.replanStatus === "previewing") return;
+    publish({ replanPreview: null, replanStatus: "idle", replanError: "", replanMessage: "" });
+  }
+  async function previewReplan(input: GeneratePlanInput): Promise<void> {
+    if (snapshot.pending || loading || snapshot.status !== "ready") return;
+    publish({ pending: true, replanStatus: "previewing", replanPreview: null,
+      replanError: "", replanMessage: "", replanRange: input });
+    try {
+      const result = await api.replanning.preview(input);
+      publish({ replanPreview: result, replanStatus: "ready" });
+    } catch (error) {
+      publish({ replanError: errorMessage(error), replanStatus: "error" });
+    } finally { publish({ pending: false }); }
+  }
+  async function applyReplan(): Promise<void> {
+    const preview = snapshot.replanPreview;
+    if (snapshot.pending || snapshot.replanStatus !== "ready" || !preview) return;
+    publish({ pending: true, replanStatus: "applying", replanError: "" });
+    invalidateRisks();
+    try {
+      const result = await api.replanning.apply(preview);
+      // A committed result must survive refresh failure; never offer the old apply again.
+      publish({ replanPreview: null, replanMessage: `Study plan updated: ${result.sessions_moved.length} moved, ${result.sessions_created.length} added, ${result.sessions_removed.length} removed.${result.unscheduled_minutes ? ` ${result.unscheduled_minutes} minutes remain unscheduled.` : ""}` });
+      await load();
+      publish({ replanStatus: "applied" });
+    } catch (error) {
+      publish({ replanStatus: "error", replanPreview: null,
+        replanError: errorMessage(error) + " Request a fresh preview before retrying." });
+      await refreshRisks(true);
+    } finally { publish({ pending: false }); }
+  }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, dispatch, generatePlan, refreshRisks,
+    load, dispatch, generatePlan, refreshRisks, previewReplan, applyReplan, cancelReplan,
     clearMutationError() { publish({ mutationError: "" }); },
   };
 }
