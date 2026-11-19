@@ -173,3 +173,9 @@ Settings adds an Account panel for display name, Auth email, avatar upload/remov
 ## Live assistant interaction
 
 The approved panel/full-page layout now uses live backend chat requests with thinking, error/retry and escaped message text. Starter prompts are actual requests. Compact bordered confirmation cards show exact proposed values and Confirm/Cancel; replan cards reuse Calendar diff/risk/shortfall details. No proposal is visually presented as saved. Expired/stale actions require a new proposal. Account changes clear conversation immediately; no demo/canned replies are rendered. Manual task/calendar routes remain accessible when AI is unavailable.
+
+## Post-registration setup
+
+A separate centered onboarding shell uses the current Light/Dark/System, accent, contrast and reduced-motion controls. Five focused steps use a progress list/bar, Back/Continue, accessible selectable chips, optional academic fields and clear validation. On phone layouts the progress list becomes compact and the form is single-column, with no horizontal page scroll. Drafts save between steps; optional privacy details can be omitted. Skip clearly states that no planner entities are created.
+
+Start mode cards separate manual and AI-assisted setup. The final subject checkbox lists exactly which academic subjects may be created; skill interests are never silently converted. Initial AI setup explains which task/deadline/effort/availability inputs are missing and preserves existing confirmation cards. Profile holds academic identity; Settings holds saved study defaults/goals. See [onboarding design and behavior](docs/onboarding.md).

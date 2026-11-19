@@ -5,6 +5,7 @@ import { AssistantPanel } from "../components/assistant/AssistantPanel";
 import { useAppData } from "../hooks/useAppData";
 import { isActive } from "../state/appState";
 import { hours } from "../utils/dates";
+import { GettingStarted } from "../onboarding/GettingStarted";
 
 export function AssistantPage() {
   const { state, summary } = useAppData();
@@ -15,6 +16,7 @@ export function AssistantPage() {
         title="AI Assistant"
         description="Plan your study work with guidance grounded in your saved data."
       />
+      <GettingStarted assistant />
       <div className="assistant-workspace">
         <AssistantPanel full />
         <div className="assistant-context">

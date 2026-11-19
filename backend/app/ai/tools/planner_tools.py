@@ -109,7 +109,10 @@ def risk_data(row, timezone):
 def profile_context(db, timezone):
     profile = db.scalar(select(Profile))
     return {"display_name":profile.display_name if profile else "Student", "timezone":timezone,
-            "current_local_time":now().astimezone(ZoneInfo(timezone)).isoformat()}
+            "current_local_time":now().astimezone(ZoneInfo(timezone)).isoformat(),
+            "study_preferences": {key:getattr(profile,key) for key in (
+                'study_program','interests','goals','weekly_study_hours','preferred_session_minutes',
+                'preferred_study_period','preferred_study_days')} if profile else {}}
 
 def read(db, name, data, timezone):
     current = now().astimezone(ZoneInfo(timezone)); today=current.date()

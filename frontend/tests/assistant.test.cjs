@@ -12,6 +12,27 @@ const {ApiError}=require('../src/api/client.ts');
 const answer=(extra={})=>({message:'Your real task is due Friday.',provider:'fake',model:'test',actions:[],confirmation:null,metadata:{},...extra});
 const pending=(type='create_task')=>({id:'action-id',type,summary:{subject:'Databases',values:{title:'Presentation',estimated_hours:3,priority:'HIGH'}},expires_at:'2099-01-01T00:00:00Z',status:'PENDING',preview:null});
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json'}});
+
+for (const [status,expected] of [[503,/AI Assistant is unavailable/],[504,/timed out/],[429,/temporarily rate-limited/]]) {
+ test(`normalized ${status} error retains the original message and requires manual retry`,async t=>{
+  const original=global.fetch;let requests=0,refreshes=0;
+  t.after(()=>{global.fetch=original;});
+  global.fetch=async()=>{requests++;return requests===1?json({detail:'SECRET provider internals'},status):json(answer());};
+  const api=createApi('http://mock.invalid');
+  const store=createAssistantStore(api.assistant,async()=>{refreshes++;});
+  await store.send('What should I study today?');
+  assert.match(store.getSnapshot().error,expected);
+  assert.match(store.getSnapshot().error,/Your planner data is unchanged/);
+  assert.doesNotMatch(store.getSnapshot().error,/SECRET/);
+  assert.equal(requests,1);assert.equal(store.getSnapshot().canRetry,true);
+  assert.equal(store.getSnapshot().messages.length,1);assert.equal(refreshes,0);
+  assert.match(render(store),/Retry message/);
+  await store.retry();
+  assert.equal(requests,2);assert.equal(store.getSnapshot().messages.length,2);
+  assert.equal(store.getSnapshot().messages[0].content,'What should I study today?');
+  assert.equal(store.getSnapshot().error,'');assert.equal(refreshes,0);
+ });
+}
 function setup(options={}) {
  const calls=[];let refreshes=0;
  const api={message:async(message,history)=>{calls.push({message,history});return options.message ? options.message(message,history):answer();},

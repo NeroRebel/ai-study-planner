@@ -1,9 +1,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { ApiError, createApiClient, errorMessage } from '../api/client';
-export interface Profile {
-  user_id:string; display_name:string; avatar_path:string|null; timezone:'Europe/Budapest';
-  created_at:string; updated_at:string;
-}
+import type { Profile, ProfilePatch, OnboardingFinish } from './profile';
+export type { Profile } from './profile';
 export interface AuthSnapshot {
   loading:boolean; session:Session|null; profile:Profile|null; avatarUrl:string|null;
   profileLoading:boolean; error:string; recovery:boolean;
@@ -80,9 +78,21 @@ export function createAuthStore(client:SupabaseClient, baseUrl:string, origin:st
     async resetPassword(email:string){const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:origin+'/reset-password'});if(error)throw error;},
     async updatePassword(password:string){const {error}=await client.auth.updateUser({password});if(error)throw error;recoveryStorage?.removeItem(recoveryKey);publish({recovery:false});},
     async google(){const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:origin+'/auth/callback'}});if(error)throw error;},
-    async updateProfile(values:Partial<Pick<Profile,'display_name'|'avatar_path'|'timezone'>>){
+    async updateProfile(values:ProfilePatch){
       const id=state.session?.user.id;if(!id)throw new Error('Sign in first.');
-      await api(id).request<Profile>('/api/profile','PATCH',values);await refreshProfile();
+      const current=revision;
+      await api(id).request<Profile>('/api/profile','PATCH',values);
+      if(current!==revision || state.session?.user.id!==id)throw new Error('Your account changed. Please try again.');
+      await refreshProfile();
+      if(current!==revision || state.session?.user.id!==id)throw new Error('Your account changed. Please try again.');
+      if(state.error)throw new Error('Profile saved, but could not be refreshed. Retry loading your profile.');
+    },
+    async completeOnboarding(values:OnboardingFinish){
+      const id=state.session?.user.id;if(!id)throw new Error('Sign in first.');
+      const current=revision;
+      const result=await api(id).request<{profile:Profile}>('/api/profile/onboarding/complete','POST',values);
+      if(current!==revision || state.session?.user.id!==id)throw new Error('Your account changed. Please try again.');
+      publish({profile:result.profile});return result.profile;
     },
     async deleteAccount(confirmation:string){
       const id=state.session?.user.id;if(!id)throw new Error('Sign in first.');

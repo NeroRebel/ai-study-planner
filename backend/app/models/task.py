@@ -18,7 +18,6 @@ class Task(Owned, IdentityTimestamps, Base):
         CheckConstraint("remaining_hours >= 0 AND remaining_hours <= estimated_hours", name="remaining_range"),
         CheckConstraint("progress >= 0 AND progress <= 100", name="progress_range"),
         CheckConstraint("status != 'COMPLETED' OR (progress = 100 AND remaining_hours = 0)", name="completed_consistency"),
-        CheckConstraint("remaining_hours != 0 OR status IN ('COMPLETED', 'CANCELLED')", name="zero_remaining_status"),
     )
 
     title: Mapped[str] = mapped_column(String(160), nullable=False)

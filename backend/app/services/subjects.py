@@ -7,10 +7,16 @@ from app.services.common import required, serialize_write
 
 def create(db: Session, data):
     serialize_write(db)
-    item = Subject(**data.model_dump())
-    db.add(item)
+    item = add(db, data)
     db.commit()
     db.refresh(item)
+    return item
+
+
+def add(db: Session, data):
+    """Validated subject insertion inside a caller-owned transaction."""
+    item = Subject(**data.model_dump())
+    db.add(item)
     return item
 
 

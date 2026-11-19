@@ -59,7 +59,7 @@ Progress and remaining hours must not be independent competing sources of truth.
 
 New tasks normally start with remaining_hours equal to estimated_hours and progress zero; existing work can be entered at creation. Increasing an estimate retains remaining effort unless a revised value is provided, subject to consistency validation. The UI should allow adjusting both so previously completed work can be represented accurately. When remaining work exceeds the old total estimate, the student must revise the total as well.
 
-COMPLETED implies remaining_hours zero and progress 100. Zero remaining effort transitions to COMPLETED. Nonzero progress normally implies IN_PROGRESS, but IN_PROGRESS with zero progress is allowed when work has started without measurable completion. CANCELLED preserves effort values but excludes the task from scheduling and active risk. Reopening a completed or cancelled task is an explicit update with consistent remaining work and status.
+COMPLETED implies remaining_hours zero and progress 100. Ordinary effort/progress updates reaching zero remaining effort transition to COMPLETED. Explicitly reopening an existing task with an active status preserves its recorded progress and remaining effort, including 100% progress and zero effort; unrelated edits must not close it again. Users revise progress/remaining effort explicitly when additional work exists. Such active zero-effort tasks remain visible but receive no scheduling allocation or active risk. Nonzero progress normally implies IN_PROGRESS, but IN_PROGRESS with zero progress is allowed when work has started without measurable completion. CANCELLED preserves effort values but excludes the task from scheduling and active risk. No historical sessions are changed or created by reopening.
 
 ### Availability
 
@@ -313,3 +313,13 @@ Profiles support display name, private avatar, Auth-sourced email display and fi
 ## Implemented tool-using Assistant contract
 
 The Assistant is an authenticated tool orchestration layer, documented in [docs/ai-assistant.md](docs/ai-assistant.md). Read tools use canonical state and deterministic services. All persistent mutations require a server-stored, owner-bound, expiring exact-payload proposal and an explicit Confirm request; chat text cannot authorize writes. Confirmation and its execution receipt are atomic and replay-safe. Replan Apply retains snapshot/diff/time protections. Availability changes and their subsequent replan need separate confirmations in this version; previews do not simulate hypothetical constraints. Conversation text is account-scoped session-local memory, cleared at identity changes. Gemini is implemented; OpenAI is not.
+
+## Account onboarding and academic preferences
+
+A verified authenticated user must have a loaded, matching profile before protected planner content mounts. New profiles default onboarding_completed=false; pre-existing profiles are backfilled true by migration 0005. Unknown status is gated with loading/error retry. Skip records completion/skipped status without creating records. Continue persists wizard drafts and a 1–5 resume step.
+
+Profile academic fields: optional university/program, level (Bachelor/Master/PhD/Other), year 1–12; weekly hours 1–80, session duration 30/45/60/90, preferred period, ISO study weekdays, bounded typed interests and allowlisted goals. Profile/Settings allow editing without rerunning onboarding. Preferences do not constitute availability or alter deterministic policies. Existing Profile RLS covers these values.
+
+`POST /api/profile/onboarding/complete` accepts a start mode, subject-creation consent, exact approved subject names and skip flag. It creates approved subject interests (not skills), avoids matching-name duplicates and commits atomically with completion. Stale subject selections are rejected; repeated completion creates nothing further. Completion timestamps/status are server-owned. See [the implemented contract](docs/onboarding.md).
+
+AI-assisted setup requires real missing assignments, deadlines, effort and dated availability, with each mutation confirmed through existing tools. The Assistant may use safe academic context but remains restricted to study planning. Risk thresholds and scheduling/replanning semantics are unchanged.

@@ -38,6 +38,15 @@ def task_values(data: dict, old: Task | None = None) -> dict:
     status = (TaskStatus.CANCELLED if requested_status == TaskStatus.CANCELLED else
               TaskStatus.COMPLETED if remaining == 0 else
               TaskStatus.IN_PROGRESS if progress > 0 or requested_status == TaskStatus.IN_PROGRESS else TaskStatus.TODO)
+    # Explicit reopening is a lifecycle change, not invented unfinished work.
+    # Keep 100% / zero effort until the user supplies revised work. Ordinary
+    # progress-to-100 updates still complete a task as before; unrelated edits
+    # to an already reopened zero-effort task must not close it again.
+    active = {TaskStatus.TODO, TaskStatus.IN_PROGRESS}
+    if (old is not None and remaining == 0 and requested_status in active
+            and (data.get("status") in active or
+                 (old.status in active and minute_hours(old.remaining_hours) == 0))):
+        status = requested_status
     result = {key: value for key, value in data.items() if key not in {"remaining_hours", "estimated_hours", "progress", "status"}}
     if "deadline" in result:
         result["deadline"] = result["deadline"].astimezone(UTC)

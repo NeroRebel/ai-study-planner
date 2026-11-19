@@ -4,6 +4,7 @@ import { useAppData } from "../../hooks/useAppData";
 import { RequestError } from "../common/RequestError";
 import { Modal } from "../common/Modal";
 import { FormField } from "../common/FormField";
+import { ReopenTaskButton } from "./ReopenTaskButton";
 import { TaskRisk } from "../common/LiveRisk";
 import { inputToISO, localInput, serializeDeadline, todayDate, addDays } from "../../utils/dates";
 import { validateTask } from "../../state/appState";
@@ -207,9 +208,11 @@ export function TaskDialog({ id }: { id: string }) {
           Changes are saved to your study server. Existing reservations must fit the revised
           effort and deadline. If they conflict, edit or remove those blocks first.
           Completing or cancelling a task preserves recorded outcomes.
+          Reopening keeps current progress; update progress explicitly if more work remains.
         </p>
 <RequestError message={error} />
         <div className="form-actions">
+          {task && <ReopenTaskButton task={task} onReopened={() => setForm(previous => ({ ...previous, status: "IN_PROGRESS" }))} />}
           {task && <button type="button" className="text-button" disabled={pending}
             onClick={async () => {
               if (!window.confirm("Delete this task and all linked sessions and recorded study history? Cancel the task instead to retain history.")) return;

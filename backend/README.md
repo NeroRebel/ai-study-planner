@@ -251,3 +251,11 @@ Legacy rows stay invisible and are never auto-claimed. A trusted operator may ex
 ## Tool-using AI Assistant
 
 Configure server-only AI_PROVIDER=gemini, AI_MODEL and GEMINI_API_KEY in backend/.env and run `alembic upgrade head`. Chat is POST /api/assistant/message; exact stored proposals use POST /api/assistant/actions/{id}/confirm or /cancel with an empty JSON body. Every route is authenticated and owner-scoped. Gemini uses the existing HTTPX dependency; no new SDK is required. OpenAI is not implemented. Pending commands have a five-minute expiry and are saved atomically with execution receipts; migration 0004 adds a protected metadata table, not conversation storage. See [docs/ai-assistant.md](../docs/ai-assistant.md) for the provider contract, tool allowlist, RLS flag, transaction wrapper, retention, privacy, limits and live Gemini/API verification and remaining browser acceptance checks.
+
+## Onboarding profiles
+
+Apply migration `0005_profile_onboarding` with `alembic upgrade head` before starting the updated frontend; `alembic check` verifies consistency. Existing profiles are marked complete; new profiles are incomplete. The existing authenticated Profile API now carries academic fields and bounded JSONB interests/goals/days. `POST /api/profile/onboarding/complete` handles exact subject consent and atomic completion; existing Profile RLS applies. No onboarding session cookie or new Auth provider is used. See [onboarding](../docs/onboarding.md) for fields, migration behavior, privacy and acceptance checks. Normal pytest remains isolated from Supabase.
+
+## Task reopening
+
+Migration `0006_reopen_tasks` removes only the constraint that forced every zero-effort task to be closed; apply it with `alembic upgrade head`. The authenticated `PATCH /api/tasks/{id}` supports explicit `status: IN_PROGRESS` without resetting progress or effort. COMPLETED still requires 100% progress and zero effort. Reopening never changes study sessions or creates history. Active zero-effort tasks receive no allocations or active risk; revise progress/remaining hours explicitly when more work exists. Ordinary progress-to-100 completion is unchanged. Before downgrading 0006, explicitly close any active zero-effort tasks; downgrade does not rewrite them automatically.

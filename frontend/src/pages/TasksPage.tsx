@@ -6,6 +6,7 @@ import { useAppData } from "../hooks/useAppData";
 import { PageHeader } from "../components/common/PageHeader";
 import { EmptyState } from "../components/common/EmptyState";
 import { TaskCard } from "../components/tasks/TaskCard";
+import { ReopenTaskButton } from "../components/tasks/ReopenTaskButton";
 import { ProgressBar } from "../components/common/ProgressBar";
 import { PriorityBadge } from "../components/common/PriorityBadge";
 import { TaskRisk } from "../components/common/LiveRisk";
@@ -222,6 +223,7 @@ export function TasksPage() {
                           >
                             {statusLabels[task.status]}
                           </span>
+                          <ReopenTaskButton task={task} />
                         </td>
                       </tr>
                     );

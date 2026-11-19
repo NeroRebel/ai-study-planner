@@ -2,7 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 from app.api.dependencies import Db, Config
 from app.core.auth import Principal, get_current_user
-from app.schemas.profile import ProfileRead, ProfilePatch, DeleteAccount
+from app.schemas.profile import ProfileRead, ProfilePatch, DeleteAccount, OnboardingComplete
+from app.schemas.subject import SubjectRead
+from app.schemas.common import Schema
 from app.services import profiles
 
 User = Annotated[Principal,Depends(get_current_user)]
@@ -13,6 +15,13 @@ def read_profile(db:Db,user:User):return profiles.get_profile(db,user.user_id)
 
 @router.patch('/profile',response_model=ProfileRead)
 def update_profile(data:ProfilePatch,db:Db,user:User,config:Config):return profiles.patch_profile(db,user,data,config)
+
+class OnboardingResult(Schema):
+    profile: ProfileRead
+    created_subjects: list[SubjectRead]
+
+@router.post('/profile/onboarding/complete',response_model=OnboardingResult)
+def complete_onboarding(data:OnboardingComplete,db:Db,user:User):return profiles.complete_onboarding(db,user,data)
 
 @router.delete('/account',status_code=204)
 def remove_account(data:DeleteAccount,user:User,config:Config):

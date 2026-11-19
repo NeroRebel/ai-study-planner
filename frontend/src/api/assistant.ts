@@ -21,7 +21,8 @@ export const assistantApi = (client: ApiClient) => ({
     let value: AssistantResponse;
     try { value = await client.request<AssistantResponse>("/api/assistant/message", "POST", { message, history }, 90_000); }
     catch (error) {
-      if (error instanceof ApiError && error.status >= 500) throw new ApiError("AI Assistant is unavailable. Your planner data is unchanged. Try again later or use your planner directly.", error.status);
+      if (error instanceof ApiError && error.status === 429) throw new ApiError("The AI service is temporarily rate-limited. Please try again shortly. Your planner data is unchanged.", error.status);
+      if (error instanceof ApiError && error.status >= 500) throw new ApiError("AI Assistant is unavailable. Your planner data is unchanged. " + (error.status === 504 ? "The AI service timed out. Please try again in a moment." : "Try again in a moment or use your planner directly."), error.status);
       throw error;
     }
     return {...value, actions:value.actions.map(card => card.preview ? {...card,preview:mapPreview(card.preview)} : card),

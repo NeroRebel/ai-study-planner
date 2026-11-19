@@ -6,6 +6,7 @@ from app.core.auth import Principal
 from app.core.exceptions import DomainError
 from app.core.config import Settings
 from app.models import Profile
+from app.services.common import serialize_write, now
 
 
 def bootstrap(db, user_id: UUID):
@@ -42,6 +43,38 @@ def patch_profile(db, principal: Principal, data, settings: Settings):
     for key,value in values.items():setattr(item,key,value)
     db.commit();db.refresh(item)
     return item
+
+
+def complete_onboarding(db, principal: Principal, data):
+    from app.models import Subject
+    from app.schemas.subject import SubjectCreate, SubjectRead
+    from app.schemas.profile import ProfileRead
+    from app.services import subjects
+    if data.skip and data.create_subjects:
+        raise DomainError('Skipping setup cannot create subjects.')
+    bootstrap(db, principal.user_id)
+    serialize_write(db)
+    item = db.scalar(select(Profile).where(Profile.user_id == principal.user_id).with_for_update())
+    created = []
+    if not item.onboarding_completed:
+        if data.create_subjects:
+            selected = {interest['name'].casefold() for interest in item.interests if interest['type'] == 'subject'}
+            approved = [name.casefold() for name in data.subject_names]
+            if set(approved) != selected or len(approved) != len(set(approved)):
+                raise DomainError('Selected subjects changed. Review your subjects again before finishing setup.',409)
+            existing = {subject.name.casefold() for subject in db.scalars(select(Subject))}
+            for interest in item.interests:
+                if interest['type'] == 'subject' and interest['name'].casefold() not in existing:
+                    created.append(subjects.add(db, SubjectCreate(name=interest['name'])))
+                    existing.add(interest['name'].casefold())
+        item.onboarding_completed = True
+        item.onboarding_skipped = data.skip
+        item.onboarding_completed_at = now()
+        item.onboarding_start_mode = 'manual' if data.skip else data.start_mode
+        item.onboarding_step = 5
+    db.commit()
+    db.refresh(item)
+    return {'profile': ProfileRead.model_validate(item), 'created_subjects': [SubjectRead.model_validate(subject) for subject in created]}
 
 
 def delete_account(principal: Principal, settings: Settings):

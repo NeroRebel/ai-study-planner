@@ -3,7 +3,7 @@ import { LockKeyhole, Check } from "lucide-react";
 import { AccountSecurity } from "../auth/AccountSecurity";
 import { PageHeader } from "../components/common/PageHeader";
 import { SegmentedControl, Toggle } from "../components/common/Controls";
-import { FormField } from "../components/common/FormField";
+import { StudyPreferencesForm } from "../onboarding/StudyPreferencesForm";
 import { uiPreferences, useUiPreferences } from "../state/uiPreferences";
 
 const themes = [{ value: "system", label: "System" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }] as const;
@@ -34,11 +34,7 @@ export function SettingsPage() {
         <section className="settings-section" id="settings-planner" aria-labelledby="planner-title">
           <header><span className="section-number">02</span><div><h2 id="planner-title">Planner</h2><p>Defaults for manual blocks, without changing the planning engine.</p></div></header>
           <div className="preference-controls">
-            <FormField label="New manual block duration" hint="Used when opening Add study block. Existing sessions and automatic scheduling are unchanged.">
-              <select value={preferences.sessionMinutes} onChange={event => update({ sessionMinutes: Number(event.target.value) })}>
-                {[15, 30, 45, 60, 90, 120, 180, 240].map(value => <option key={value} value={value}>{value} minutes</option>)}
-              </select>
-            </FormField>
+            <StudyPreferencesForm />
             <div className="policy-note"><LockKeyhole size={16} aria-hidden="true" /><div><strong>Deterministic planning policy</strong><p>Automatic planning uses deadline-first ordering, splits work when needed and respects saved availability. To avoid late sessions, adjust your availability in Calendar.</p><Link to="/calendar">Manage availability →</Link></div></div>
           </div>
         </section>

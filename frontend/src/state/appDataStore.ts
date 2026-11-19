@@ -117,6 +117,7 @@ export function createAppDataStore(api: AppApi, initialName?: string) {
           break;
         }
         case "complete-task": await api.tasks.update(action.id, { status: "COMPLETED" }); break;
+        case "reopen-task": await api.tasks.update(action.id, { status: "IN_PROGRESS" }); break;
         case "delete-task": await api.tasks.remove(action.id); break;
         case "save-subject":
           if (action.id) await api.subjects.update(action.id, action.input);

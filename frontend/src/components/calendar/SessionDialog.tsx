@@ -1,5 +1,6 @@
 import { todayDate } from "../../utils/dates";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AuthContext } from "../../auth/AuthContext";
 import type { FormEvent } from "react";
 import { useAppData } from "../../hooks/useAppData";
 import { RequestError } from "../common/RequestError";
@@ -15,6 +16,8 @@ import { useUiPreferences } from "../../state/uiPreferences";
 export function SessionDialog({ request }: { request: SessionDialogRequest }) {
   const { state, dispatch, openSession, openTask, pending } = useAppData();
   const preferences = useUiPreferences();
+  const auth = useContext(AuthContext);
+  const sessionMinutes = auth?.profile?.preferred_session_minutes ?? preferences.sessionMinutes;
   const session = state.sessions.find((item) => item.id === request.id);
   const active = state.tasks.filter(isActive);
   const [form, setForm] = useState<SessionInput>(
@@ -24,7 +27,7 @@ export function SessionDialog({ request }: { request: SessionDialogRequest }) {
           task_id: request.task_id ?? "",
           date: request.date ?? todayDate(),
           start_time: "17:00",
-          end_time: String(17 + Math.floor(preferences.sessionMinutes / 60)).padStart(2, "0") + ":" + String(preferences.sessionMinutes % 60).padStart(2, "0"),
+          end_time: String(17 + Math.floor(sessionMinutes / 60)).padStart(2, "0") + ":" + String(sessionMinutes % 60).padStart(2, "0"),
           status: "PLANNED",
           completed_minutes: 0,
         },

@@ -6,6 +6,7 @@ import { TaskRisk } from "../common/LiveRisk";
 import { PriorityBadge } from "../common/PriorityBadge";
 import { formatDate, statusLabels } from "../../utils/format";
 import { isActive } from "../../state/appState";
+import { ReopenTaskButton } from "./ReopenTaskButton";
 
 export function TaskCard({ task }: { task: Task }) {
   const { state, dispatch, openTask, pending } = useAppData();
@@ -44,6 +45,7 @@ export function TaskCard({ task }: { task: Task }) {
       </div>
       <div className="record-footer">
         <span>{task.remaining_hours.toFixed(1)}h remaining</span>
+        <ReopenTaskButton task={task} />
         <button className="text-button" onClick={() => openTask(task.id)}>
           View details →
         </button>

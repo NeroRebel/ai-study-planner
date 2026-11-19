@@ -22,6 +22,7 @@ import { currentWeek, weekLabel, TIMEZONE } from "../utils/dates";
 import { useAppData } from "../hooks/useAppData";
 import { currentRisk } from "../state/riskSelectors";
 import { hours } from "../utils/dates";
+import { GettingStarted } from "../onboarding/GettingStarted";
 
 export function DashboardPage() {
   const { state, summary: stats, riskStatus } = useAppData();
@@ -58,6 +59,7 @@ export function DashboardPage() {
             </button>}
           </div>
         </header>
+        <GettingStarted />
         <div className="stat-grid">
           <StatCard
             label="Tasks completed"

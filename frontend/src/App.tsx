@@ -16,6 +16,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { OnboardingGate } from "./onboarding/OnboardingGate";
 
 const AuthProvider = lazy(async () => ({ default: (await import("./auth/AuthProvider")).AuthProvider }));
 
@@ -24,7 +25,7 @@ export default function App() {
     <Suspense fallback={<div className="auth-shell" role="status">Restoring your session…</div>}><AuthProvider><BrowserRouter><Routes>
       {(["sign-in","sign-up","forgot-password","reset-password","check-email"] as const).map(mode=><Route key={mode} path={"/"+mode} element={<AuthPage mode={mode} />} />)}
       <Route path="/auth/callback" element={<AuthPage mode="callback" />} />
-      <Route path="/*" element={<AuthGate><Workspace /></AuthGate>} />
+      <Route path="/*" element={<AuthGate><OnboardingGate><Workspace /></OnboardingGate></AuthGate>} />
     </Routes></BrowserRouter></AuthProvider></Suspense>
   );
 }

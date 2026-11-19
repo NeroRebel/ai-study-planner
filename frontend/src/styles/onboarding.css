@@ -1,0 +1,65 @@
+/* Account setup shares the product's semantic tokens, controls and motion policy. */
+.onboarding-shell { min-height: 100dvh; background: var(--background); padding: 0 32px 40px; }
+.onboarding-topbar { max-width: 1200px; margin: auto; height: 88px; display: flex; justify-content: space-between; align-items: center; }
+.onboarding-topbar .brand { margin: 0; font-size: 14px; color: var(--text); }
+.onboarding-topbar .text-button { font-size: 13px; color: var(--muted); }
+.onboarding-layout { max-width: 1120px; margin: 40px auto 0; display: grid; grid-template-columns: 320px minmax(0,1fr); gap: 80px; align-items: start; }
+.onboarding-progress { padding-top: 28px; }
+.onboarding-progress h1 { font-size: 33px; line-height: 1.22; font-weight: 600; letter-spacing: -1px; margin: 16px 0; }
+.onboarding-progress > p:not(.eyebrow) { color: var(--muted); font-size: 14px; line-height: 1.8; }
+.onboarding-progress ol { list-style: none; margin: 40px 0; padding: 0; display: grid; gap: 18px; }
+.onboarding-progress li { display: flex; align-items: center; gap: 16px; color: var(--muted); font-size: 14px; }
+.onboarding-progress li > span { color: var(--tertiary); font-size: 11px; width: 24px; padding: 4px 0; border-bottom: 2px solid var(--border); font-variant-numeric: tabular-nums; }
+.onboarding-progress li.is-current { color: var(--text); font-weight: 600; }
+.onboarding-progress li.is-current > span, .onboarding-progress li.is-done > span { border-color: var(--accent); color: var(--accent); }
+.onboarding-progress > small { display: block; color: var(--muted); line-height: 1.7; font-size: 12px; max-width: 240px; }
+.onboarding-panel { min-width: 0; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-modal); }
+.onboarding-step-caption { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; gap: 12px; }
+.onboarding-progress-bar { height: 3px; background: var(--border-subtle); margin: 16px 0 32px; border-radius: 3px; overflow: hidden; }
+.onboarding-progress-bar > span { display: block; height: 100%; background: var(--accent); transition: width 180ms; }
+.onboarding-title { font-size: 24px; font-weight: 600; letter-spacing: -.5px; line-height: 1.3; outline: none; }
+.onboarding-description { color: var(--muted); font-size: 14px; line-height: 1.75; margin: 12px 0 28px; }
+.onboarding-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 24px; }
+.onboarding-fields h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+.chip-grid { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.selectable-chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border-strong); border-radius: 7px; background: transparent; color: var(--muted); padding: 9px 12px; min-height: 40px; max-width: 100%; font-size: 13px; line-height: 1.6; text-align: left; transition: color 140ms, border-color 140ms, background 140ms; }
+.selectable-chip > span { overflow-wrap: anywhere; min-width: 0; }
+.selectable-chip:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.selectable-chip.is-selected { color: var(--accent); border-color: var(--accent-border); background: var(--accent-soft); }
+.selectable-chip:disabled { cursor: not-allowed; opacity: .5; }
+.custom-interest { display: grid; grid-template-columns: minmax(0,1fr) 116px; gap: 12px; border-top: 1px solid var(--border); padding-top: 20px; }
+.custom-interest > button { grid-column: 1/-1; justify-self: start; }
+.range-label { display: flex; align-items: center; justify-content: space-between; font-size: 14px; margin-bottom: 12px; }
+.range-label strong { color: var(--accent); }
+.onboarding-fields input[type=range] { appearance: none; width: 100%; min-height: 28px; height: 28px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.onboarding-fields input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: var(--border-strong); }
+.onboarding-fields input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--accent); }
+.onboarding-fields input[type=range]::-moz-range-track { height: 4px; border-radius: 4px; background: var(--border-strong); }
+.onboarding-fields input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+.hour-presets { display: flex; gap: 8px; margin-top: 8px; }
+.hour-presets button { min-height: 36px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 5px; background: transparent; color: var(--muted); font-size: 12px; }
+.hour-presets button[aria-pressed=true] { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-border); }
+.study-day-chips .selectable-chip { padding: 8px 10px; }
+.onboarding-fields .segmented-control { display: flex; }
+.onboarding-fields .segmented-control label { flex: 1; padding-inline: 8px; }
+.start-mode-options { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 12px; }
+.start-mode-card { display: flex; align-items: start; gap: 12px; border: 1px solid var(--border-strong); padding: 20px; border-radius: 8px; cursor: pointer; }
+.start-mode-card > input { flex-shrink: 0; margin-top: 2px; }
+.start-mode-card > svg { color: var(--muted); margin-top: 2px; }
+.start-mode-card strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.6; }
+.start-mode-card small { display: block; font-size: 12px; color: var(--muted); line-height: 1.8; margin-top: 4px; }
+.start-mode-card.is-selected { border-color: var(--accent-border); background: var(--accent-soft); }
+.subject-approval { display: flex; align-items: start; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.subject-approval > input { margin-top: 3px; flex-shrink: 0; }
+.subject-approval strong { display: block; font-size: 13px; }
+.subject-approval small { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.7; overflow-wrap: anywhere; }
+.onboarding-actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px; }
+.onboarding-skip { display: flex; margin: 20px auto 0; color: var(--muted); font-size: 12px; }
+.onboarding-privacy { text-align: center; font-size: 11px; line-height: 1.8; color: var(--muted); margin-top: 8px; }
+.account-study-preferences { display: grid; gap: 20px; }
+.getting-started { margin-bottom: 24px; border-left: 2px solid var(--accent); padding: 16px 20px; background: var(--surface); font-size: 14px; }
+.getting-started p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 6px 0 12px; }
+.getting-started .header-actions { flex-wrap: wrap; }
+@media (max-width: 1100px) { .onboarding-layout { grid-template-columns: 240px minmax(0,1fr); gap: 40px; margin-top: 24px; } .onboarding-progress h1 { font-size: 28px; } .onboarding-panel { padding: 28px; } }
+@media (max-width: 800px) { .onboarding-shell { padding-inline: 24px; } .onboarding-layout { grid-template-columns: minmax(0,1fr); max-width: 620px; gap: 24px; margin-top: 0; } .onboarding-progress { padding-top: 0; } .onboarding-progress h1,.onboarding-progress > p,.onboarding-progress > small { display: none; } .onboarding-progress ol { margin: 0; display: flex; justify-content: space-between; gap: 8px; } .onboarding-progress li { flex-direction: column; gap: 4px; font-size: 11px; } .onboarding-progress li > span { text-align: center; } }
+@media (max-width: 480px) { .onboarding-shell { padding: 0 16px 24px; } .onboarding-topbar { height: 72px; } .onboarding-panel { padding: 24px 18px; } .onboarding-title { font-size: 22px; } .onboarding-description { font-size: 13px; } .onboarding-actions { gap: 8px; } .onboarding-actions .button { padding-inline: 12px; font-size: 12px; } .onboarding-fields .segmented-control label { font-size: 12px; padding-inline: 6px; min-width: 65px; } .selectable-chip { min-height: 44px; } .study-day-chips { gap: 6px; } .study-day-chips .selectable-chip { padding: 7px; font-size: 12px; } .study-day-chips .selectable-chip svg { display: none; } .custom-interest { grid-template-columns: minmax(0,1fr) 104px; } .start-mode-card { padding: 16px; gap: 8px; } .start-mode-card > svg { display: none; } }

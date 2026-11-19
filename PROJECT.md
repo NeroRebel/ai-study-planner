@@ -145,3 +145,7 @@ Working assumptions are documented in SPEC.md. Implemented scheduler and risk po
 ## Implemented assistant layer
 
 The backend tool-using Assistant supports Gemini through a provider abstraction. It retrieves authenticated live state and proposes validated actions requiring explicit UI confirmation; deterministic planning policies remain unchanged. OpenAI remains a future adapter. See [docs/ai-assistant.md](docs/ai-assistant.md) for configuration, privacy, safety and actual verification limits.
+
+## Post-registration onboarding
+
+New confirmed accounts complete a five-step, profile-backed setup before entering the planner. Academic context, interests/skills, study preferences and goals personalize the workspace. Existing profiles are migrated as complete; skipping setup creates no planner data. Selected academic subjects become real Subjects only with explicit final consent. Manual start opens the workspace; AI-assisted start gathers missing task/deadline/availability data through existing confirmed tools and the deterministic Scheduler. See [onboarding](docs/onboarding.md). No auth/session system or planner algorithm is replaced.

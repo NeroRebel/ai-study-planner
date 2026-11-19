@@ -22,6 +22,7 @@ export interface SessionInput {
 export type AppAction =
   | { type: "save-task"; id: string; input: TaskInput }
   | { type: "complete-task"; id: string }
+  | { type: "reopen-task"; id: string }
   | { type: "delete-task"; id: string }
   | { type: "save-subject"; id?: string; input: SubjectInput }
   | { type: "delete-subject"; id: string }

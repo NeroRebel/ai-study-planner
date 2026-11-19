@@ -139,3 +139,9 @@ Calendar provides minimum column/hour dimensions of 128/52, 164/68 and 212/84px 
 ### Refined product shell
 
 The sidebar has a single identity-row collapse action and a 64px icon rail whose logo reopens navigation. The sole desktop profile avatar is at the sidebar bottom; mobile Profile is in More. Settings uses a separate utility group with consistent icon alignment. Semantic Normal/High contrast and layered light/graphite surfaces live in `styles/themes.css`; `styles/shell.css` defines the final shell composition. Dashboard metrics/insights use lighter section boundaries. The Assistant is a 316px closable dock on large desktops and a focus-managed dialog on smaller screens, sharing the existing account-bound conversation store. Backend policies and API/auth flows are unchanged. See the structural refinement section in [UI notes](../docs/ui-polish.md).
+
+## Post-registration onboarding
+
+AuthGate retains the existing session/recovery flow; OnboardingGate then waits for an owned profile with a known completion state. `/onboarding` saves each step through the authenticated Profile API. Existing users bypass it, new users complete or skip it, and account switching clears drafts via the profile-keyed gate. Deploy backend migration 0005 before this frontend.
+
+Profile now edits academic identity; Settings Planner stores weekly target, preferred session duration/period/days and goals in the account. New manual blocks use the account duration when set, with the old local duration only as fallback. Appearance/layout preferences remain device-local. Subject creation requires the final checkbox and exact subject names; tasks/availability/plans require their normal separate actions. AI-assisted start opens the existing Assistant with a guided setup entry and sends no model request until the student starts it. See [onboarding](../docs/onboarding.md).

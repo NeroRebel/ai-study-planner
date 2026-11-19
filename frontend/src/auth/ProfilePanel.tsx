@@ -4,6 +4,7 @@ import {useAuth} from './AuthContext';
 import {authMessage} from './authStore';
 import {replaceAvatar,removeAvatar} from './avatars';
 import {Panel} from '../components/common/Panel';
+import type {ProfilePatch,StudyLevel} from './profile';
 
 export function ProfileAvatar({className='avatar'}:{className?:string}) {
   const {profile,avatarUrl}=useAuth();const name=profile?.display_name||'Student';
@@ -13,6 +14,7 @@ export function ProfilePanel() {
   const auth=useAuth();
   const supabase=auth.client;
   const [name,setName]=useState<string|null>(null);
+  const [academic,setAcademic]=useState<ProfilePatch>({});
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState('');
   async function run(action:()=>Promise<unknown>){
     if(busy)return;setBusy(true);setError('');setSuccess('');
@@ -20,7 +22,7 @@ export function ProfilePanel() {
   }
   async function save(event:FormEvent){event.preventDefault();await run(async()=>{
     if(!name?.trim()&&!auth.profile?.display_name)throw new Error('Enter your display name.');
-    await auth.actions?.updateProfile({display_name:(name??auth.profile?.display_name??'').trim()});
+    await auth.actions?.updateProfile({display_name:(name??auth.profile?.display_name??'').trim(),...academic});
   });}
   return <Panel title="Personal information" subtitle="Your identity across your study workspace">
     <div className="profile-account"><ProfileAvatar /><div><strong>{auth.profile?.display_name||'Student'}</strong><p className="muted">{auth.session?.user.email}</p></div></div>
@@ -28,6 +30,10 @@ export function ProfilePanel() {
     {auth.error&&<p role="alert" className="form-error">{auth.error} <button type="button" className="text-button" onClick={()=>{void auth.actions?.refreshProfile();}}>Retry profile</button></p>}
     <form onSubmit={save} className="editor-form">
       <label className="form-field">Display name<input required maxLength={80} value={name??auth.profile?.display_name??''} onChange={e=>setName(e.target.value)} /></label>
+      <label className="form-field">University (optional)<input maxLength={160} value={academic.university===undefined?auth.profile?.university??'':academic.university??''} onChange={e=>setAcademic(value=>({...value,university:e.target.value||null}))}/></label>
+      <label className="form-field">Study program / major (optional)<input maxLength={160} value={academic.study_program===undefined?auth.profile?.study_program??'':academic.study_program??''} onChange={e=>setAcademic(value=>({...value,study_program:e.target.value||null}))}/></label>
+      <div className="form-grid"><label className="form-field">Study level<select value={academic.study_level===undefined?auth.profile?.study_level??'':academic.study_level??''} onChange={e=>setAcademic(value=>({...value,study_level:e.target.value as StudyLevel||null}))}><option value="">Prefer not to say</option>{['Bachelor','Master','PhD','Other'].map(value=><option key={value}>{value}</option>)}</select></label>
+      <label className="form-field">Study year (optional)<input type="number" min={1} max={12} value={academic.study_year===undefined?auth.profile?.study_year??'':academic.study_year??''} onChange={e=>setAcademic(value=>({...value,study_year:e.target.value?e.target.valueAsNumber:null}))}/></label></div>
       <label className="form-field">Timezone<select disabled aria-label="Profile timezone"><option>Europe/Budapest</option></select></label>
       <p className="form-note">Planner times currently use Budapest. Other timezones are not supported yet.</p>
       <button className="button button-primary" disabled={busy||!auth.profile}>Save profile</button>
