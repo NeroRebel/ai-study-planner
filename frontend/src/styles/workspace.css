@@ -1,0 +1,16 @@
+.workspace-controls { display: grid; gap: 16px; min-width: 0; }
+.workspace-controls .header-actions { flex-wrap: wrap; }
+.workspace-import-options { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 12px; }
+.workspace-preview { margin: 8px 0 20px; border-top: 1px solid var(--border); padding-top: 20px; }
+.workspace-preview h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+.workspace-counts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px 20px; margin-bottom: 16px; }
+.workspace-counts > div { border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; }
+.workspace-counts dt { font-size: 12px; color: var(--muted); }
+.workspace-counts dd { font-size: 22px; font-weight: 600; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+.workspace-issues { margin: 12px 0; border-block: 1px solid var(--border-subtle); padding: 12px 0; }
+.workspace-issues summary { cursor: pointer; font-size: 13px; font-weight: 600; padding: 4px 0; }
+.workspace-issues ul { max-height: 240px; overflow: auto; list-style: none; padding: 0; margin: 8px 0 0; }
+.workspace-issues li { display: grid; gap: 4px; font-size: 12px; line-height: 1.6; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+.workspace-issues li span { color: var(--muted); overflow-wrap: anywhere; }
+.workspace-controls [role=status] { overflow-wrap: anywhere; }
+@media (max-width: 480px) { .workspace-controls .header-actions .button { flex: 1; justify-content: center; } }

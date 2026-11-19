@@ -259,3 +259,7 @@ Apply migration `0005_profile_onboarding` with `alembic upgrade head` before sta
 ## Task reopening
 
 Migration `0006_reopen_tasks` removes only the constraint that forced every zero-effort task to be closed; apply it with `alembic upgrade head`. The authenticated `PATCH /api/tasks/{id}` supports explicit `status: IN_PROGRESS` without resetting progress or effort. COMPLETED still requires 100% progress and zero effort. Reopening never changes study sessions or creates history. Active zero-effort tasks receive no allocations or active risk; revise progress/remaining hours explicitly when more work exists. Ordinary progress-to-100 completion is unchanged. Before downgrading 0006, explicitly close any active zero-effort tasks; downgrade does not rewrite them automatically.
+
+## Workspace backups and fixtures
+
+Authenticated `/api/workspace/export` and `/api/workspace/import/preview` / `apply` support version-one planner-only JSON, signed read-only previews, deterministic Merge and confirmed transactional Replace. No additional schema migration is required. Single-process development uses a random import-signing key; configure backend-only `WORKSPACE_IMPORT_SIGNING_KEY` (32+ random characters) consistently across production workers/replicas. Keep it in ignored environment/secrets configuration. See [import/export security, schema, limits and QA workflow](../docs/import-export.md).

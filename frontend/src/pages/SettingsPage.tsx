@@ -4,11 +4,12 @@ import { AccountSecurity } from "../auth/AccountSecurity";
 import { PageHeader } from "../components/common/PageHeader";
 import { SegmentedControl, Toggle } from "../components/common/Controls";
 import { StudyPreferencesForm } from "../onboarding/StudyPreferencesForm";
+import { WorkspaceData } from "../components/settings/WorkspaceData";
 import { uiPreferences, useUiPreferences } from "../state/uiPreferences";
 
 const themes = [{ value: "system", label: "System" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }] as const;
 const accents = [{ value: "gold", label: "Amber" }, { value: "red", label: "Red" }, { value: "blue", label: "Blue" }, { value: "green", label: "Green" }, { value: "violet", label: "Violet" }, { value: "teal", label: "Teal" }] as const;
-const sections = ["Appearance", "Planner", "Assistant", "Accessibility", "Account & Security"];
+const sections = ["Appearance", "Planner", "Assistant", "Accessibility", "Data / Workspace", "Account & Security"];
 const sectionId = (label: string) => label.toLowerCase().replaceAll(/[^a-z]+/g, "-");
 
 export function SettingsPage() {
@@ -54,8 +55,12 @@ export function SettingsPage() {
             <SegmentedControl label="Interface spacing" value={preferences.density} options={[{ value: "comfortable", label: "Comfortable" }, { value: "compact", label: "Compact" }]} onChange={density => update({ density })} />
           </div>
         </section>
+        <section className="settings-section" id="settings-data-workspace" aria-labelledby="workspace-data-title">
+          <header><span className="section-number">05</span><div><h2 id="workspace-data-title">Data / Workspace</h2><p>Private backups and reviewed transfers.</p></div></header>
+          <div className="preference-controls"><WorkspaceData /></div>
+        </section>
         <section className="settings-section security-section" id="settings-account-security" aria-labelledby="security-title">
-          <header><span className="section-number">05</span><div><h2 id="security-title">Account & Security</h2><p>Manage access to your personal workspace.</p></div></header>
+          <header><span className="section-number">06</span><div><h2 id="security-title">Account & Security</h2><p>Manage access to your personal workspace.</p></div></header>
           <div className="preference-controls"><AccountSecurity /></div>
         </section>
       </div>

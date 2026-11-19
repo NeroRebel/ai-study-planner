@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     ai_model: str = Field(default="", pattern=r"^[A-Za-z0-9._-]*$")
     gemini_api_key: SecretStr | None = None
     ai_timeout_seconds: int = Field(default=15, ge=1, le=30)
+    workspace_import_signing_key: SecretStr | None = Field(default=None, min_length=32, max_length=256)
+
+    @field_validator('workspace_import_signing_key', mode='before')
+    @classmethod
+    def empty_workspace_key(cls, value):
+        return None if value == '' else value
 
     supabase_url: str = ""
     supabase_publishable_key: SecretStr | None = None

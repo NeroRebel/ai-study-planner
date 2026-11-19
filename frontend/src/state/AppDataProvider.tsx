@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { AppApi } from "../api";
 import { createApi } from "../api";
 import { createAssistantStore } from "./assistantStore";
+import { createWorkspaceStore } from "./workspaceStore";
 import { AppDataContext } from "./AppDataContext";
 import type { SessionDialogRequest } from "./AppDataContext";
 import { createAppDataStore } from "./appDataStore";
@@ -13,6 +14,8 @@ export function AppDataProvider({ children, api, displayName }: { children: Reac
   const [client] = useState(() => api ?? createApi(import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"));
   const [store] = useState(() => createAppDataStore(client, displayName || "Student"));
   const [assistantStore] = useState(() => createAssistantStore(client.assistant, store.refreshAfterExternalMutation));
+  const [workspaceStore] = useState(() => createWorkspaceStore(client.workspace, store.refreshAfterExternalMutation));
+  const workspace = useSyncExternalStore(workspaceStore.subscribe, workspaceStore.getSnapshot);
   const assistant = useSyncExternalStore(assistantStore.subscribe, assistantStore.getSnapshot);
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const { state } = snapshot;
@@ -31,9 +34,9 @@ export function AppDataProvider({ children, api, displayName }: { children: Reac
       clearInterval(timer);
       // StrictMode immediately resubscribes the same mounted store. An actual
       // account-boundary unmount clears it and rejects late response publishes.
-      queueMicrotask(() => { if (!store.hasSubscribers()) { store.dispose(); assistantStore.dispose(); } });
+      queueMicrotask(() => { if (!store.hasSubscribers()) { store.dispose(); assistantStore.dispose(); workspaceStore.dispose(); } });
     };
-  }, [store, assistantStore]);
+  }, [store, assistantStore, workspaceStore]);
   useEffect(() => {
     if (snapshot.riskStatus !== "ready" || !snapshot.riskExpiresAt) return;
     const delay = Math.max(1000, Math.min(60_000, Date.parse(snapshot.riskExpiresAt) - Date.now() + 50));
@@ -52,6 +55,6 @@ export function AppDataProvider({ children, api, displayName }: { children: Reac
   return <AppDataContext.Provider value={{ ...snapshot, ...actions,
     previewReplan: store.previewReplan, applyReplan: store.applyReplan, cancelReplan: store.cancelReplan,
     refreshRisks: store.refreshRisks, generatePlan: store.generatePlan, dispatch: store.dispatch, clearMutationError: store.clearMutationError,
-    summary, studyDays, taskDialog, sessionDialog, assistant, assistantStore,
+    summary, studyDays, taskDialog, sessionDialog, assistant, assistantStore, workspace, workspaceStore,
   }}>{children}</AppDataContext.Provider>;
 }

@@ -12,6 +12,18 @@ from app.services.time_rules import covers, interval
 SESSION_FIELDS = ("task_id", "date", "start_time", "end_time", "planned_minutes", "completed_minutes", "status")
 
 
+def validate_outcome(status, completed, duration):
+    """Shared outcome invariants for CRUD and validated workspace restoration."""
+    if completed < 0 or completed > duration:
+        raise DomainError("Completed minutes must be between zero and planned minutes.")
+    if status in {StudySessionStatus.PLANNED, StudySessionStatus.MISSED} and completed != 0:
+        raise DomainError("PLANNED and MISSED sessions require zero completed minutes.")
+    if status == StudySessionStatus.COMPLETED and completed != duration:
+        raise DomainError("COMPLETED sessions require the full planned minutes.")
+    if status == StudySessionStatus.PARTIALLY_COMPLETED and not 0 < completed < duration:
+        raise DomainError("PARTIALLY_COMPLETED requires some, but not all, planned minutes.")
+
+
 def save(db: Session, data, timezone: str, id=None):
     serialize_write(db)
     old = required(db.get(StudySession, id), "Study session") if id is not None else None
@@ -26,14 +38,7 @@ def save(db: Session, data, timezone: str, id=None):
     completed = values.get("completed_minutes", 0)
     status = values.get("status", StudySessionStatus.PLANNED)
     values.update(completed_minutes=completed, status=status)
-    if completed < 0 or completed > duration:
-        raise DomainError("Completed minutes must be between zero and planned minutes.")
-    if status in {StudySessionStatus.PLANNED, StudySessionStatus.MISSED} and completed != 0:
-        raise DomainError("PLANNED and MISSED sessions require zero completed minutes.")
-    if status == StudySessionStatus.COMPLETED and completed != duration:
-        raise DomainError("COMPLETED sessions require the full planned minutes.")
-    if status == StudySessionStatus.PARTIALLY_COMPLETED and not 0 < completed < duration:
-        raise DomainError("PARTIALLY_COMPLETED requires some, but not all, planned minutes.")
+    validate_outcome(status, completed, duration)
     if intervals.overlapping(db, StudySession, values["date"], values["start_time"], values["end_time"], id):
         raise DomainError("Study session overlaps an existing session.", 409)
     structural_change = old is None or any(key in incoming and incoming[key] != getattr(old, key)

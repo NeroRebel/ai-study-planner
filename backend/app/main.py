@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import secrets
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +33,10 @@ def create_app(settings: Settings | None = None, *, db_session_factory=None) -> 
         description="Authenticated personal study workspaces with deterministic scheduling, risk and preview/apply replanning. Tool-using assistant with explicit confirmation.",
     )
     application.state.settings = config
+    # Local fallback invalidates previews on restart. Multi-worker deployments
+    # must configure one stable backend-only key across workers.
+    application.state.workspace_import_key = (config.workspace_import_signing_key.get_secret_value().encode()
+        if config.workspace_import_signing_key else secrets.token_bytes(32))
     application.state.session_factory = db_session_factory
     application.add_middleware(
         CORSMiddleware, allow_origins=config.allowed_origins, allow_credentials=False,

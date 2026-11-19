@@ -22,6 +22,7 @@ def add(db: Session, data):
 
 def patch(db: Session, id, data):
     serialize_write(db)
+    serialize_write(db)
     item = required(repo.get(db, id), "Subject")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
@@ -31,6 +32,7 @@ def patch(db: Session, id, data):
 
 
 def remove(db: Session, id):
+    serialize_write(db)
     serialize_write(db)
     item = required(repo.get(db, id), "Subject")
     if repo.has_tasks(db, id):

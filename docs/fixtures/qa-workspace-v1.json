@@ -1,0 +1,26 @@
+{
+  "format": "ai-study-planner-workspace",
+  "version": 1,
+  "exported_at": "2026-11-19T12:00:00Z",
+  "workspace": {
+    "subjects": [
+      {"id":"databases","name":"Databases","description":"QA database course","color":"gold"},
+      {"id":"statistics","name":"Statistics","description":"QA statistics course","color":"blue"},
+      {"id":"project-management","name":"Project Management","description":"QA report course","color":"purple"}
+    ],
+    "tasks": [
+      {"id":"database-assignment","subject_id":"databases","title":"Finish Databases assignment","description":"Three hours of real remaining effort.","deadline":"2030-01-08T17:00:00Z","estimated_hours":5,"remaining_hours":3,"progress":40,"priority":"HIGH","difficulty":"HARD","status":"IN_PROGRESS"},
+      {"id":"statistics-review","subject_id":"statistics","title":"Review Statistics notes","description":"A two-hour review.","deadline":"2030-01-10T17:00:00Z","estimated_hours":2,"remaining_hours":2,"progress":0,"priority":"MEDIUM","difficulty":"MEDIUM","status":"TODO"},
+      {"id":"completed-report","subject_id":"project-management","title":"Completed Project Management report","description":"Completed work for the Reopen task QA flow.","deadline":"2020-01-08T17:00:00Z","estimated_hours":2,"remaining_hours":0,"progress":100,"priority":"LOW","difficulty":"EASY","status":"COMPLETED"},
+      {"id":"reopened-review","subject_id":"statistics","title":"Reopened Statistics review","description":"Active lifecycle with unchanged 100% progress. It must receive no invented allocation.","deadline":"2030-01-10T17:00:00Z","estimated_hours":1,"remaining_hours":0,"progress":100,"priority":"LOW","difficulty":"EASY","status":"IN_PROGRESS"}
+    ],
+    "availability": [
+      {"id":"monday-morning","date":"2030-01-07","start_time":"09:00","end_time":"12:00"},
+      {"id":"tuesday-afternoon","date":"2030-01-08","start_time":"16:00","end_time":"19:00"}
+    ],
+    "study_sessions": [
+      {"id":"database-block","task_id":"database-assignment","date":"2030-01-07","start_time":"09:00","end_time":"10:00","planned_minutes":60,"completed_minutes":0,"status":"PLANNED","origin":"SCHEDULER"},
+      {"id":"report-history","task_id":"completed-report","date":"2020-01-05","start_time":"09:00","end_time":"10:00","planned_minutes":60,"completed_minutes":60,"status":"COMPLETED","origin":"MANUAL"}
+    ]
+  }
+}
