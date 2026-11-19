@@ -7,6 +7,7 @@ const {AuthContext}=require('../src/auth/AuthContext.ts');
 const {AuthGate}=require('../src/auth/AuthGate.tsx');
 const {AuthPage}=require('../src/auth/AuthPage.tsx');
 const {ProfilePanel}=require('../src/auth/ProfilePanel.tsx');
+const {AccountSecurity}=require('../src/auth/AccountSecurity.tsx');
 const {createApiClient}=require('../src/api/client.ts');
 const {validateAvatar,replaceAvatar,removeAvatar}=require('../src/auth/avatars.ts');
 const {createAppDataStore}=require('../src/state/appDataStore.ts');
@@ -114,9 +115,12 @@ test('API never sends a request with a missing token',async t=>{
  const api=createApiClient('http://mock.invalid',{getAccessToken:async()=>null,onUnauthorized:()=>expired++});
  await assert.rejects(api.request('/api/tasks'),/sign in again/);assert.equal(requests,0);assert.equal(expired,1);
 });
-test('profile surface shows identity, timezone, avatar controls and destructive confirmation',()=>{
+test('profile shows identity and avatar controls; destructive confirmation lives in account settings',()=>{
  const html=render(ProfilePanel,{}, {session:session('A'),profile:profile('A')});
- assert.match(html,/A@example.test/);assert.match(html,/Europe\/Budapest/);assert.match(html,/Change avatar/);assert.match(html,/Type DELETE to confirm/);assert.match(html,/disabled=""[^>]*>Permanently delete account/);
+ assert.match(html,/A@example.test/);assert.match(html,/Europe\/Budapest/);assert.match(html,/Change avatar/);
+ assert.doesNotMatch(html,/Delete account|Sign out|Appearance/);
+ const security=render(AccountSecurity,{}, {session:session('A'),profile:profile('A')});
+ assert.match(security,/Type DELETE to confirm/);assert.match(security,/disabled=""[^>]*>Permanently delete account/);
 });
 test('account deletion keeps session on server failure and clears it only after success',async t=>{
  const {store,calls,fail}=setup(t,session('A'));await store.initialize();fail(()=>json({detail:'Unavailable'},503));

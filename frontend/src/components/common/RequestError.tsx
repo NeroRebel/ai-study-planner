@@ -1,3 +1,4 @@
+import { Feedback } from "./Feedback";
 export function RequestError({ message }: { message: string }) {
-  return message ? <p role="alert" className="form-error">{message}</p> : null;
+  return message ? <Feedback tone="error">{message}</Feedback> : null;
 }

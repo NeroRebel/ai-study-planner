@@ -1,7 +1,8 @@
 import { todayDate, currentWeek } from "../../utils/dates";
 import type { CSSProperties } from "react";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Coffee, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coffee, Plus, CalendarDays } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAppData } from "../../hooks/useAppData";
 import { selectDays } from "../../state/selectors";
 import { timeMinutes } from "../../state/appState";
@@ -9,10 +10,14 @@ import { addDays, mondayOf, weekLabel } from "../../utils/dates";
 import { ReplanDialog } from "./ReplanDialog";
 import { PlannerFeedback } from "./PlannerFeedback";
 import { StudyBlock } from "./StudyBlock";
+import { SegmentedControl } from "../common/Controls";
+import { calendarDimensions, uiPreferences, useUiPreferences } from "../../state/uiPreferences";
 
 export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
   const { state, openSession, pending, generating, generatePlan, generationResult, generationError, generationRange, previewReplan, replanStatus, replanMessage } = useAppData();
   const [week, setWeek] = useState(currentWeek());
+  const preferences = useUiPreferences();
+  const dimensions = calendarDimensions[preferences.calendarDensity];
   const [selectedDate, setSelectedDate] = useState(todayDate());
   const days = selectDays(state, week);
   const weekSessions = state.sessions.filter(
@@ -53,7 +58,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
           <p>{weekLabel(week)}</p>
         </div>
         <div className="planner-controls">
-          <span className="week-arrows">
+          {expanded && <span className="week-arrows">
             <button
               type="button"
               disabled={!expanded || generating}
@@ -70,7 +75,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
             >
               <ChevronRight size={14} />
             </button>
-          </span>
+          </span>}
           {expanded ? (
             <>
               <button
@@ -125,10 +130,16 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
         </div>
       )}
       {expanded && <ReplanDialog />}
+      {expanded && <div className="calendar-density"><SegmentedControl label="Calendar density" value={preferences.calendarDensity}
+        options={[{ value: "compact", label: "Compact" }, { value: "comfortable", label: "Comfortable" }, { value: "wide", label: "Wide" }]}
+        onChange={calendarDensity => uiPreferences.update({ calendarDensity })} /><span>Day columns scroll horizontally when needed.</span></div>}
       {expanded && replanMessage && <p className="data-notice" role="status">{replanMessage}</p>}
       {expanded && generationRange?.date_from === week && <PlannerFeedback
         result={generationResult} error={generationError} tasks={state.tasks} />}
-      <div
+      {!expanded && !weekSessions.length ? <div className="weekly-empty">
+        <CalendarDays size={24} strokeWidth={1.5} aria-hidden="true" />
+        <div><h3>A little structure for your week</h3><p>Add availability and reserve your first study block.</p><Link className="text-button" to="/calendar">Open Calendar →</Link></div>
+      </div> : <><div
         className="mobile-week-strip"
         role="group"
         aria-label="Choose a study day"
@@ -160,6 +171,8 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
             {
               "--hour-slice": 100 / (endHour - startHour) + "%",
               "--calendar-hours": endHour - startHour,
+              "--day-min-width": dimensions.column + "px",
+              "--hour-height": dimensions.hour + "px",
             } as CSSProperties
           }
         >
@@ -239,6 +252,7 @@ export function WeeklyPlanner({ expanded = false }: { expanded?: boolean }) {
           ))}
         </div>
       </div>
+      </>}
       <div className="planner-footnote">
         Entered study schedule · Europe/Budapest
         {expanded ? " · shaded windows show entered availability" : ""}

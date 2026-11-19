@@ -1,210 +1,68 @@
-import { ProfilePanel } from "../auth/ProfilePanel";
-import { useAuth } from "../auth/AuthContext";
-import { useState } from "react";
-import type { FormEvent } from "react";
-import { Save } from "lucide-react";
-import { useAppData } from "../hooks/useAppData";
-import type { Preferences } from "../state/appState";
+import { Link } from "react-router-dom";
+import { LockKeyhole, Check } from "lucide-react";
+import { AccountSecurity } from "../auth/AccountSecurity";
 import { PageHeader } from "../components/common/PageHeader";
-import { Panel } from "../components/common/Panel";
+import { SegmentedControl, Toggle } from "../components/common/Controls";
 import { FormField } from "../components/common/FormField";
+import { uiPreferences, useUiPreferences } from "../state/uiPreferences";
+
+const themes = [{ value: "system", label: "System" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }] as const;
+const accents = [{ value: "gold", label: "Amber" }, { value: "red", label: "Red" }, { value: "blue", label: "Blue" }, { value: "green", label: "Green" }, { value: "violet", label: "Violet" }, { value: "teal", label: "Teal" }] as const;
+const sections = ["Appearance", "Planner", "Assistant", "Accessibility", "Account & Security"];
+const sectionId = (label: string) => label.toLowerCase().replaceAll(/[^a-z]+/g, "-");
 
 export function SettingsPage() {
-  const auth = useAuth();
-  const { state, dispatch } = useAppData();
-  const [form, setForm] = useState<Preferences>(state.preferences);
-  const [saved, setSaved] = useState(false),
-    [error, setError] = useState("");
-  function update<K extends keyof Preferences>(key: K, value: Preferences[K]) {
-    setForm((previous) => ({ ...previous, [key]: value }));
-    setSaved(false);
-  }
-  function save(event: FormEvent) {
-    event.preventDefault();
-    if (!form.name.trim()) {
-      setError("Enter your name.");
-      return;
-    }
-    if (form.endTime <= form.startTime) {
-      setError("Preferred study end time must be after start time.");
-      return;
-    }
-    dispatch({
-      type: "preferences",
-      value: { ...form, name: auth.profile?.display_name || "Student" },
-    });
-    setSaved(true);
-    setError("");
-  }
-  return (
-    <div className="product-page settings-page">
-      <PageHeader
-        eyebrow="MAKE IT YOURS"
-        title="Settings"
-        description="A few preferences for your student workspace."
-      />
-      <ProfilePanel />
-      <form onSubmit={save} className="settings-form">
-        <Panel
-          title="Study details"
-          subtitle="Study details and preferences stay local for now"
-        >
-          <div className="settings-fields">
-            <FormField label="Study program">
-              <input
-                value={form.program}
-                onChange={(event) => update("program", event.target.value)}
-              />
-            </FormField>
-            <FormField label="University">
-              <input
-                value={form.university}
-                onChange={(event) => update("university", event.target.value)}
-              />
-            </FormField>
+  const preferences = useUiPreferences();
+  const update = uiPreferences.update;
+  return <div className="product-page settings-page">
+    <PageHeader eyebrow="WORKSPACE PREFERENCES" title="Settings" description="Set up a workspace that works for you."
+      action={<Link className="button button-secondary" to="/profile">Edit profile</Link>} />
+    <p className="preference-storage-note" role="status">{uiPreferences.hasPersistenceError() ? "Preferences are active, but this browser could not save them. They may reset on reload." : "Changes save automatically on this device. Profile information is saved to your account."}</p>
+    <div className="settings-layout">
+      <nav className="settings-navigation" aria-label="Settings sections">{sections.map(label => <a key={label} href={"#settings-" + sectionId(label)}>{label}</a>)}</nav>
+      <div className="settings-sections">
+        <section className="settings-section" id="settings-appearance" aria-labelledby="appearance-title">
+          <header><span className="section-number">01</span><div><h2 id="appearance-title">Appearance</h2><p>A neutral foundation, with your own accent.</p></div></header>
+          <div className="preference-controls">
+            <SegmentedControl label="Theme" value={preferences.theme} options={themes} onChange={theme => update({ theme })} />
+            <fieldset className="accent-field"><legend>Accent color</legend><div className="accent-options">{accents.map(accent => <label key={accent.value} className={"accent-option accent-" + accent.value}>
+              <input type="radio" name="accent" aria-label={accent.label + " accent"} checked={preferences.accent === accent.value} onChange={() => update({ accent: accent.value })} />
+              <span className="accent-swatch" aria-hidden="true">{preferences.accent === accent.value && <Check size={15} />}</span><span>{accent.label}</span>
+            </label>)}</div></fieldset>
           </div>
-        </Panel>
-        <Panel
-          title="Study preferences"
-          subtitle="Preferences only; these do not generate or move sessions"
-        >
-          <div className="settings-fields form-grid">
-            <FormField label="Preferred session duration (minutes)">
-              <input
-                required
-                type="number"
-                min="15"
-                max="240"
-                step="5"
-                value={form.sessionMinutes}
-                onChange={(event) =>
-                  update("sessionMinutes", event.target.valueAsNumber || 0)
-                }
-              />
+        </section>
+        <section className="settings-section" id="settings-planner" aria-labelledby="planner-title">
+          <header><span className="section-number">02</span><div><h2 id="planner-title">Planner</h2><p>Defaults for manual blocks, without changing the planning engine.</p></div></header>
+          <div className="preference-controls">
+            <FormField label="New manual block duration" hint="Used when opening Add study block. Existing sessions and automatic scheduling are unchanged.">
+              <select value={preferences.sessionMinutes} onChange={event => update({ sessionMinutes: Number(event.target.value) })}>
+                {[15, 30, 45, 60, 90, 120, 180, 240].map(value => <option key={value} value={value}>{value} minutes</option>)}
+              </select>
             </FormField>
-            <FormField label="Minimum break (minutes)">
-              <input
-                required
-                type="number"
-                min="0"
-                max="120"
-                step="5"
-                value={form.breakMinutes}
-                onChange={(event) =>
-                  update("breakMinutes", event.target.valueAsNumber || 0)
-                }
-              />
-            </FormField>
-            <FormField label="Preferred start time">
-              <input
-                required
-                type="time"
-                value={form.startTime}
-                onChange={(event) => update("startTime", event.target.value)}
-              />
-            </FormField>
-            <FormField label="Preferred end time">
-              <input
-                required
-                type="time"
-                value={form.endTime}
-                onChange={(event) => update("endTime", event.target.value)}
-              />
-            </FormField>
+            <div className="policy-note"><LockKeyhole size={16} aria-hidden="true" /><div><strong>Deterministic planning policy</strong><p>Automatic planning uses deadline-first ordering, splits work when needed and respects saved availability. To avoid late sessions, adjust your availability in Calendar.</p><Link to="/calendar">Manage availability →</Link></div></div>
           </div>
-        </Panel>
-        <Panel
-          title="Planning preferences"
-          subtitle="Saved locally for the future planning engine"
-        >
-          <div className="toggle-list">
-            {(
-              [
-                [
-                  "splitTasks",
-                  "Allow splitting large tasks",
-                  "Work can be split across several study blocks.",
-                ],
-                [
-                  "earliestFirst",
-                  "Prioritize earliest deadlines",
-                  "Keep nearer deadlines in view.",
-                ],
-                [
-                  "avoidEvenings",
-                  "Avoid late evening sessions",
-                  "Prefer focused work earlier in the day.",
-                ],
-              ] as const
-            ).map(([key, label, description]) => (
-              <label key={key}>
-                <span>
-                  <strong>{label}</strong>
-                  <small>{description}</small>
-                </span>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={form[key]}
-                  onChange={(event) => update(key, event.target.checked)}
-                />
-              </label>
-            ))}
+        </section>
+        <section className="settings-section" id="settings-assistant" aria-labelledby="assistant-title">
+          <header><span className="section-number">03</span><div><h2 id="assistant-title">Assistant</h2><p>Choose how planner information is presented.</p></div></header>
+          <div className="preference-controls">
+            <Toggle label="Expand explanations by default" description="Open risk and replanning details in Assistant replies." checked={preferences.expandExplanations} onChange={expandExplanations => update({ expandExplanations })} />
+            <Toggle label="Keep quick prompts visible" description="Show suggested questions throughout a conversation." checked={preferences.showQuickPrompts} onChange={showQuickPrompts => update({ showQuickPrompts })} />
+            <div className="policy-note"><LockKeyhole size={16} aria-hidden="true" /><div><strong>Confirmation is always required</strong><p>Persistent Assistant actions always need your explicit approval. This safety policy cannot be disabled.</p></div></div>
           </div>
-        </Panel>
-        <Panel
-          title="Appearance"
-          subtitle="The approved light theme remains active in this prototype"
-        >
-          <div className="appearance-options">
-            {(["system", "light", "dark"] as const).map((value) => (
-              <label key={value}>
-                <input
-                  type="radio"
-                  name="appearance"
-                  value={value}
-                  checked={form.appearance === value}
-                  onChange={() => update("appearance", value)}
-                />
-                <span>{value[0].toUpperCase() + value.slice(1)}</span>
-                <small>
-                  {value === "light"
-                    ? "Active visual theme"
-                    : "Preference preview"}
-                </small>
-              </label>
-            ))}
+        </section>
+        <section className="settings-section" id="settings-accessibility" aria-labelledby="accessibility-title">
+          <header><span className="section-number">04</span><div><h2 id="accessibility-title">Accessibility</h2><p>Adjust legibility, spacing and movement.</p></div></header>
+          <div className="preference-controls">
+            <SegmentedControl label="Contrast" value={preferences.contrast} options={[{ value: "normal", label: "Normal" }, { value: "high", label: "High contrast" }]} onChange={contrast => update({ contrast })} />
+            <SegmentedControl label="Motion" value={preferences.motion} options={[{ value: "system", label: "System" }, { value: "reduced", label: "Reduced" }, { value: "full", label: "Full" }]} onChange={motion => update({ motion })} />
+            <SegmentedControl label="Interface spacing" value={preferences.density} options={[{ value: "comfortable", label: "Comfortable" }, { value: "compact", label: "Compact" }]} onChange={density => update({ density })} />
           </div>
-        </Panel>
-        {error && (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
-        )}
-        {saved && (
-          <p className="success-note" role="status">
-            Preferences saved for this session. Reloading restores the demo
-            defaults.
-          </p>
-        )}
-        <div className="form-actions">
-          <button
-            className="button"
-            type="button"
-            onClick={() => {
-              setForm(state.preferences);
-              setSaved(false);
-              setError("");
-            }}
-          >
-            Reset unsaved changes
-          </button>
-          <button className="button button-primary" type="submit">
-            <Save size={15} />
-            Save preferences
-          </button>
-        </div>
-      </form>
+        </section>
+        <section className="settings-section security-section" id="settings-account-security" aria-labelledby="security-title">
+          <header><span className="section-number">05</span><div><h2 id="security-title">Account & Security</h2><p>Manage access to your personal workspace.</p></div></header>
+          <div className="preference-controls"><AccountSecurity /></div>
+        </section>
+      </div>
     </div>
-  );
+  </div>;
 }

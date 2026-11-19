@@ -10,7 +10,8 @@ import { PageHeader } from "../components/common/PageHeader";
 import { MetricCard } from "../components/common/MetricCard";
 import { SubjectProgress } from "../components/dashboard/SubjectProgress";
 import { Panel } from "../components/common/Panel";
-import { completionHistory } from "../data/prototypeHistoricalAnalytics";
+import { ProgressBar } from "../components/common/ProgressBar";
+import { EmptyState } from "../components/common/EmptyState";
 
 import { addDays, hours } from "../utils/dates";
 
@@ -33,11 +34,8 @@ export function ProgressPage() {
     streak++;
     date = addDays(date, -1);
   }
-  const history = [
-    ...completionHistory,
-    { label: "Current", completion: summary.overallProgress },
-  ];
-  const maximum = Math.max(4, ...studyDays.map((day) => day.planned_hours));
+  const active = state.tasks.filter(task => task.status !== "CANCELLED");
+  const maximum = Math.max(4, ...studyDays.flatMap((day) => [day.planned_hours, day.completed_hours]));
   return (
     <div className="product-page">
       <PageHeader
@@ -85,7 +83,7 @@ export function ProgressPage() {
             <div>
               <span>Planned</span>
               <div>
-                <i style={{ width: "100%" }} />
+                <i style={{ width: summary.plannedHours ? "100%" : "0%" }} />
               </div>
               <strong>{hours(summary.plannedHours)}</strong>
             </div>
@@ -161,74 +159,14 @@ export function ProgressPage() {
             </span>
           </div>
         </Panel>
-        <Panel
-          title="Task completion trend"
-          subtitle="Effort-weighted completion snapshots, not weekly completion counts"
-        >
-          <div className="trend-chart">
-            <svg
-              viewBox="0 0 400 170"
-              role="img"
-              aria-label={history
-                .map((item) => item.label + ": " + item.completion + "%")
-                .join("; ")}
-            >
-              {[25, 50, 75, 100].map((value) => (
-                <line
-                  key={value}
-                  x1="20"
-                  x2="380"
-                  y1={150 - value * 1.25}
-                  y2={150 - value * 1.25}
-                  stroke="#eef0f3"
-                />
-              ))}
-              <polyline
-                points={history
-                  .map(
-                    (item, index) =>
-                      30 + index * 110 + "," + (150 - item.completion * 1.25),
-                  )
-                  .join(" ")}
-                fill="none"
-                stroke="#b69a70"
-                strokeWidth="3"
-                strokeLinejoin="round"
-              />
-              {history.map((item, index) => (
-                <g key={item.label}>
-                  <circle
-                    cx={30 + index * 110}
-                    cy={150 - item.completion * 1.25}
-                    r="4"
-                    fill="#b69a70"
-                  />
-                  <text
-                    x={30 + index * 110}
-                    y={138 - item.completion * 1.25}
-                    textAnchor="middle"
-                    fill="#7b6d55"
-                    fontSize="11"
-                  >
-                    {item.completion}%
-                  </text>
-                  <text
-                    x={30 + index * 110}
-                    y="168"
-                    textAnchor="middle"
-                    fill="#8c929d"
-                    fontSize="10"
-                  >
-                    {item.label}
-                  </text>
-                </g>
-              ))}
-            </svg>
-          </div>
-          <p className="chart-note">
-            Earlier weeks are historical fixtures. The latest point reflects
-            your saved task data; the earlier points are not persisted history.
-          </p>
+        <Panel title="Current task progress" subtitle="Saved effort progress · no historical estimates">
+          {active.length ? <ul className="live-progress-list">
+            {active.slice().sort((a,b)=>a.deadline.localeCompare(b.deadline)).map(task=><li key={task.id}>
+              <div><strong>{task.title}</strong><span>{task.progress}%</span></div>
+              <ProgressBar value={task.progress} label={task.title + " progress"} />
+              <small>{hours(task.remaining_hours)} remaining</small>
+            </li>)}
+          </ul> : <EmptyState title="Your progress starts here" description="Add a task and record progress to see your work move forward." />}
         </Panel>
       </div>
     </div>

@@ -10,7 +10,7 @@ import { currentRisk } from "../state/riskSelectors";
 import { ProgressBar } from "../components/common/ProgressBar";
 import { EmptyState } from "../components/common/EmptyState";
 import { dueLabel, hours } from "../utils/dates";
-import { formatDate } from "../utils/format";
+import { formatDate, formatDeadlineTime } from "../utils/format";
 
 export function DeadlinesPage() {
   const { state, summary, openTask, riskStatus } = useAppData();
@@ -118,7 +118,7 @@ export function DeadlinesPage() {
                 <div>
                   <dt>Deadline</dt>
                   <dd>
-                    {formatDate(task.deadline)}
+                    {formatDate(task.deadline)} · {formatDeadlineTime(task.deadline)}
                     <small>{dueLabel(task.deadline)}</small>
                   </dd>
                 </div>

@@ -9,5 +9,7 @@ export default defineConfig(({mode}) => {
   }
   if(env.VITE_SUPABASE_URL && !isProjectUrl(env.VITE_SUPABASE_URL))throw new Error('Supabase URL must be an HTTPS project origin without credentials.')
   if(env.VITE_SUPABASE_PUBLISHABLE_KEY && !isPublishableKey(env.VITE_SUPABASE_PUBLISHABLE_KEY))throw new Error('Only a Supabase publishable or legacy anon key is allowed in frontend configuration.')
-  return {plugins:[react()]}
+  return {plugins:[react()],build:{rolldownOptions:{output:{codeSplitting:{
+    groups:[{name:'motion',test:/node_modules[\\/](?:motion|framer-motion|motion-dom|motion-utils)[\\/]/,includeDependenciesRecursively:false}],
+  }}}}}
 })

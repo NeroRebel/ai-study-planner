@@ -12,17 +12,17 @@ export function ProfileAvatar({className='avatar'}:{className?:string}) {
 export function ProfilePanel() {
   const auth=useAuth();
   const supabase=auth.client;
-  const [name,setName]=useState<string|null>(null),[confirmation,setConfirmation]=useState('');
+  const [name,setName]=useState<string|null>(null);
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState('');
   async function run(action:()=>Promise<unknown>){
     if(busy)return;setBusy(true);setError('');setSuccess('');
-    try{await action();setSuccess('Account updated.');}catch(error){setError(authMessage(error));}finally{setBusy(false);}
+    try{await action();setSuccess('Profile updated.');}catch(error){setError(authMessage(error));}finally{setBusy(false);}
   }
   async function save(event:FormEvent){event.preventDefault();await run(async()=>{
     if(!name?.trim()&&!auth.profile?.display_name)throw new Error('Enter your display name.');
     await auth.actions?.updateProfile({display_name:(name??auth.profile?.display_name??'').trim()});
   });}
-  return <Panel title="Account" subtitle="Your private student workspace">
+  return <Panel title="Personal information" subtitle="Your identity across your study workspace">
     <div className="profile-account"><ProfileAvatar /><div><strong>{auth.profile?.display_name||'Student'}</strong><p className="muted">{auth.session?.user.email}</p></div></div>
     {auth.profileLoading&&<p role="status">Loading your profile…</p>}
     {auth.error&&<p role="alert" className="form-error">{auth.error} <button type="button" className="text-button" onClick={()=>{void auth.actions?.refreshProfile();}}>Retry profile</button></p>}
@@ -33,18 +33,13 @@ export function ProfilePanel() {
       <button className="button button-primary" disabled={busy||!auth.profile}>Save profile</button>
     </form>
     <div className="form-actions">
-      <label className="button">Change avatar<input className="sr-only" aria-label="Choose avatar" type="file" accept="image/png,image/jpeg,image/webp" disabled={busy||!auth.profile} onChange={e=>{
+      <label className="button avatar-upload">Change avatar<input className="sr-only" aria-label="Choose avatar" type="file" accept="image/png,image/jpeg,image/webp" disabled={busy||!auth.profile} onChange={e=>{
         const file=e.target.files?.[0];e.target.value='';if(!file||!supabase||!auth.session)return;
         void run(()=>replaceAvatar(supabase!,auth.session!.user.id,file,auth.profile?.avatar_path??null,path=>auth.actions!.updateProfile({avatar_path:path})));
       }} /></label>
       <button type="button" className="button" disabled={busy||!auth.profile?.avatar_path} onClick={()=>{if(supabase)void run(()=>removeAvatar(supabase!,auth.profile?.avatar_path??null,path=>auth.actions!.updateProfile({avatar_path:path})));}}>Remove avatar</button>
-      <button type="button" className="button" disabled={busy} onClick={()=>{void run(async()=>{await auth.actions?.signOut();});}}>Sign out</button>
     </div>
-    <details className="account-danger"><summary>Delete account</summary>
-      <p>This permanently deletes your account, subjects, tasks, sessions, availability and avatar. This cannot be undone.</p>
-      <label className="form-field">Type DELETE to confirm<input value={confirmation} autoComplete="off" onChange={e=>setConfirmation(e.target.value)} /></label>
-      <button type="button" className="button" disabled={busy||confirmation!=='DELETE'} onClick={()=>{void run(async()=>{await auth.actions?.deleteAccount(confirmation);});}}>Permanently delete account</button>
-    </details>
+    {busy&&<p role="status" className="form-note">Updating your account…</p>}
     {error&&<p role="alert" className="form-error">{error}</p>}{success&&<p role="status" className="success-note">{success}</p>}
   </Panel>;
 }

@@ -2,8 +2,10 @@ import { useAppData } from "../../hooks/useAppData";
 import { isActive } from "../../state/appState";
 import { Panel } from "../common/Panel";
 import { DeadlineRow } from "./DeadlineRow";
+import { TaskRisk } from "../common/LiveRisk";
+import { formatDate } from "../../utils/format";
 export function UpcomingDeadlines({ full = false }: { full?: boolean }) {
-  const { state } = useAppData();
+  const { state, openTask } = useAppData();
   const tasks = state.tasks
     .filter(isActive)
     .sort((a, b) => a.deadline.localeCompare(b.deadline));
@@ -13,7 +15,7 @@ export function UpcomingDeadlines({ full = false }: { full?: boolean }) {
       link={full ? undefined : "/deadlines"}
       className="deadlines-panel"
     >
-      <div className="table-scroll">
+      <div className="table-scroll dashboard-deadline-table">
         <table>
           <caption className="sr-only">
             Current task deadlines and live risk assessments
@@ -39,6 +41,14 @@ export function UpcomingDeadlines({ full = false }: { full?: boolean }) {
           </p>
         )}
       </div>
+      <ul className="dashboard-deadline-cards">
+        {(full ? tasks : tasks.slice(0, 4)).map(task=><li key={task.id}>
+          <button className="text-button" onClick={()=>openTask(task.id)}>{task.title}</button>
+          <span>{state.subjects.find(subject=>subject.id===task.subject_id)?.name} · {formatDate(task.deadline)}</span>
+          <TaskRisk taskId={task.id} />
+        </li>)}
+        {!tasks.length && <li>No active deadlines. You're all caught up.</li>}
+      </ul>
     </Panel>
   );
 }

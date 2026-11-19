@@ -10,9 +10,11 @@ import type { SessionInput } from "../../state/appState";
 import type { SessionDialogRequest } from "../../state/AppDataContext";
 import type { StudySessionStatus } from "../../types";
 import { statusLabels } from "../../utils/format";
+import { useUiPreferences } from "../../state/uiPreferences";
 
 export function SessionDialog({ request }: { request: SessionDialogRequest }) {
   const { state, dispatch, openSession, openTask, pending } = useAppData();
+  const preferences = useUiPreferences();
   const session = state.sessions.find((item) => item.id === request.id);
   const active = state.tasks.filter(isActive);
   const [form, setForm] = useState<SessionInput>(
@@ -22,7 +24,7 @@ export function SessionDialog({ request }: { request: SessionDialogRequest }) {
           task_id: request.task_id ?? "",
           date: request.date ?? todayDate(),
           start_time: "17:00",
-          end_time: "18:00",
+          end_time: String(17 + Math.floor(preferences.sessionMinutes / 60)).padStart(2, "0") + ":" + String(preferences.sessionMinutes % 60).padStart(2, "0"),
           status: "PLANNED",
           completed_minutes: 0,
         },

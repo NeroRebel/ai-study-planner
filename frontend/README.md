@@ -44,7 +44,7 @@ Production hosting needs an index.html fallback for BrowserRouter deep links.
 - Initial load failures do not fall back to sample entities. Loading, error/retry, successful empty, and populated states use the existing card/form styles. Navigation and local Settings remain accessible. Refresh data explicitly reloads external changes.
 - DataBoundary provides the loading/error boundary around data-dependent routes. RequestError provides accessible validation feedback. A mutation failure is also visible in the workspace banner.
 
-No Redux, query framework, or other runtime dependencies were added.
+State management remains React context and the existing stores; no Redux or query framework is used. Motion provides restrained UI transitions.
 
 ## Persistent entities and interactions
 
@@ -66,12 +66,12 @@ Deadlines are backend UTC instants. Forms convert them explicitly to/from Budape
 
 Dashboard counts, subject/overall effort progress, task deadlines, reported study time, availability, and entered sessions are presentation summaries of persisted entities. No ranking engine, feasibility engine, or deadline-risk algorithm runs in the browser. The focus list is simply active work displayed by deadline; summary read endpoints can replace frontend aggregation in a later backend phase.
 
-## Remaining prototype features
+## Feature status and local preferences
 
 - Risk is live derived backend data from `GET /api/risks`, not a fixture. One batch powers subjects, task details, Deadlines and Dashboard. Loading/errors are independent of core entities; failed/expired assessments display unavailable with retry. No-active-work results have no risk label.
-- data/prototypeHistoricalAnalytics.ts contains the fixed earlier completion-history points. The chart labels them as historical fixtures; its Current point uses saved task data.
+- Progress uses saved tasks and reported/planned sessions. No synthetic historical completion trend is displayed.
 - The Assistant uses authenticated FastAPI tools and explicit server-owned confirmation cards. No provider key is used by React; see docs/ai-assistant.md.
-- Account profiles are persistent. Study/appearance preferences and assistant conversation history remain session-local and reset on reload. Appearance controls do not implement a dark theme. Planning preferences do not generate or move sessions.
+- Account profiles are persistent. Appearance, layout, calendar density and functional UI defaults persist locally; Assistant conversation history remains session-local and resets on reload. Settings cannot alter deterministic planner policy.
 
 Automatic study-session generation is implemented as an explicit backend action. Unattended automatic replanning, notifications, external calendar integration, and PDF import remain unimplemented.
 
@@ -94,7 +94,7 @@ These historical integration checks predate authentication. Current Auth/provide
 
 There is no offline write queue, optimistic persistence, automatic retry of writes, realtime synchronization, or concurrent-edit versioning. If a network interruption makes a write's outcome uncertain, refresh before retrying. Collection refresh is explicit; local state is not a separate persistence layer. All current session history is loaded for a small semester dataset.
 
-Supabase Auth, persistent profiles and backend per-user ownership are implemented. Study preferences and historical analytics fixtures remain prototypes; drag-and-drop is not implemented.
+Supabase Auth, persistent profiles and backend per-user ownership are implemented. UI preferences persist on the device; automatic planner policy remains backend-owned. Drag-and-drop is not implemented.
 
 ## Generate study plan
 
@@ -117,8 +117,25 @@ Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in ignored .env.local, a
 
 AuthProvider restores identity before protected routes mount. Sign In/Sign Up/Check Email/Forgot Password/Reset Password and /auth/callback implement the email/PKCE and optional Google flows. The centralized API client adds the current bearer token and handles 401 without retries. Planner providers are keyed per identity; unmount clears cached entities, risks and replanning previews and suppresses late responses. Profile requests also reject obsolete account responses.
 
-Settings Account edits the persistent profile, displays Auth email/fixed Budapest timezone, manages private signed-URL avatars and provides sign-out/typed-confirmation account deletion. Other study/appearance preferences remain local. Backend migration 0003 and private avatars bucket policies are required. See [docs/authentication.md](../docs/authentication.md) for exact Supabase/Google/Storage setup, recovery limitations and live two-user acceptance steps. Those provider flows are unit-tested with mocks but were not live-verified without operator-supplied Auth configuration.
+The /profile route edits the persistent profile, displays Auth email/fixed Budapest timezone and manages private signed-URL avatars. Settings contains appearance, functional local UI defaults, sign-out, password recovery and typed-confirmation account deletion. Backend migration 0003 and private avatars bucket policies are required. See [docs/authentication.md](../docs/authentication.md) for exact Supabase/Google/Storage setup, recovery limitations and live two-user acceptance steps. Those provider flows are unit-tested with mocks but were not live-verified without operator-supplied Auth configuration.
 
 ## Tool-using Assistant
 
 The existing panel and /assistant page share an account-bound session-local conversation store. api/assistant.ts centralizes message/confirm/cancel requests with the normal bearer token. Changes require Confirm and refresh shared entities/risks after the backend saves them. A read-only replan card also offers Review for Apply, which obtains a validated server-owned confirmation without another model call. Chat/provider errors leave manual planner controls available. No frontend Gemini/OpenAI key is required or permitted. Configure the backend provider and apply migration 0004; see [assistant setup, tools, privacy and live checks](../docs/ai-assistant.md). Conversation text resets on reload/sign-out/account switch; expired/stale proposals require a fresh request.
+
+## Visual system and motion
+
+The warm neutral visual system is defined in styles/tokens.css and the shared stylesheets. Motion (`motion/react`) provides short entrances, dialog transitions, calendar position transitions and restrained press feedback. MotionProvider defaults to the OS reduced-motion setting, with explicit System/Reduced/Full choices in Settings; CSS follows the resolved preference. Native dialog focus/Escape behavior and account-keyed provider teardown are retained.
+
+Shared Feedback, LoadingState and FormField components keep status, loading and form-label semantics consistent. Progress shows saved entity summaries rather than fabricated historical analytics. See [UI polish notes](../docs/ui-polish.md) for tokens, responsive behavior, browser verification and limitations. Normal unit tests remain isolated from Supabase and Gemini.
+
+
+### Appearance and local preferences
+
+Settings supports System/Light/Dark, Normal/High contrast, six accent palettes, System/Reduced/Full motion and comfortable/compact spacing. `state/uiPreferences.ts` validates and stores presentation choices under `ai-study-planner.ui.v1` in localStorage, including sidebar/Assistant visibility, calendar density, new manual-block duration and Assistant disclosure/quick-prompt preferences. Storage denial is reported without breaking the workspace. System theme/motion reacts to OS changes; browser tabs share updates. These non-sensitive device preferences also apply on auth screens and are shared across accounts on the same browser. They do not alter scheduling, risk, replanning or AI tool policy.
+
+Calendar provides minimum column/hour dimensions of 128/52, 164/68 and 212/84px in Compact/Comfortable/Wide. It scrolls horizontally on narrow screens, preserving alignment and full session details. Profile identity stays account-persisted; sign-out/deletion live only in Settings Account & Security. Styled native inputs preserve keyboard semantics and platform option/date picker popovers. No additional dependency was required for this follow-up.
+
+### Refined product shell
+
+The sidebar has a single identity-row collapse action and a 64px icon rail whose logo reopens navigation. The sole desktop profile avatar is at the sidebar bottom; mobile Profile is in More. Settings uses a separate utility group with consistent icon alignment. Semantic Normal/High contrast and layered light/graphite surfaces live in `styles/themes.css`; `styles/shell.css` defines the final shell composition. Dashboard metrics/insights use lighter section boundaries. The Assistant is a 316px closable dock on large desktops and a focus-managed dialog on smaller screens, sharing the existing account-bound conversation store. Backend policies and API/auth flows are unchanged. See the structural refinement section in [UI notes](../docs/ui-polish.md).

@@ -4,7 +4,7 @@
 body {
   margin: 0;
   min-width: 320px;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
 }
 button,
@@ -31,7 +31,7 @@ button:disabled {
   opacity: 0.55;
 }
 :focus-visible {
-  outline: 2px solid #a9824f;
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 main:focus {
@@ -55,7 +55,7 @@ h2 {
   letter-spacing: -0.3px;
 }
 h3 {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 svg {
@@ -84,7 +84,7 @@ ul {
   left: 20px;
   z-index: 50;
   padding: 12px 18px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--gold);
   border-radius: 8px;
 }
@@ -98,38 +98,59 @@ ul {
   gap: 8px;
   min-height: 44px;
   padding: 10px 16px;
-  border: 1px solid #e3dccf;
-  border-radius: 8px;
-  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  transition: background-color 150ms, border-color 150ms;
+  font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
 }
 .button-primary {
-  background: #f5eddf;
-  color: #84663a;
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
 }
-.button:hover {
-  background: #eee1cd;
+.button:not(:disabled):hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
+}
+.button-primary:not(:disabled):hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+.button-destructive {
+  color: var(--destructive);
+  border-color: var(--destructive);
+  background: var(--destructive-soft);
+}
+.button-ghost, .button-subtle {
+  background: transparent;
+  border-color: transparent;
 }
 .icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: #8a8f99;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
   border-radius: 6px;
   flex-shrink: 0;
 }
-.icon-button:hover {
-  background: #f5f6f7;
+.icon-button:not(:disabled):hover {
+  background: var(--surface-muted);
   color: var(--text);
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 1px;
-  color: #858994;
+  color: var(--muted);
   text-transform: uppercase;
 }
 .page-header {
@@ -145,7 +166,7 @@ ul {
 .page-description {
   color: var(--muted);
   margin-top: 7px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .panel {
   background: var(--surface);
@@ -153,7 +174,7 @@ ul {
   border-radius: var(--radius);
   min-width: 0;
   overflow: hidden;
-  box-shadow: 0 2px 4px #29303d03;
+  box-shadow: 0 2px 4px var(--shadow-card-color);
 }
 .panel-header {
   display: flex;
@@ -163,14 +184,14 @@ ul {
   gap: 10px;
 }
 .panel-header p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 3px;
 }
 .progress-bar {
   height: 6px;
   border-radius: 5px;
-  background: #f1f2f5;
+  background: var(--surface-muted);
   overflow: hidden;
 }
 .progress-bar > span {
@@ -193,26 +214,26 @@ ul {
   gap: 3px;
   padding: 3px 5px;
   border-radius: 5px;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.2;
   font-weight: 500;
   white-space: nowrap;
 }
 .risk-low {
-  color: #63816d;
-  background: #eef5f0;
+  color: var(--muted);
+  background: var(--border-subtle);
 }
 .risk-medium {
-  color: #98743f;
-  background: #fbf3e5;
+  color: var(--warning);
+  background: var(--border);
 }
 .risk-high {
-  color: #bc626e;
-  background: #fff0f2;
+  color: var(--destructive);
+  background: var(--border-subtle);
 }
 .risk-critical {
-  color: #a53f54;
-  background: #fce2e8;
+  color: var(--destructive);
+  background: var(--border);
 }
 .preview-page {
   padding: 28px;
@@ -221,12 +242,12 @@ ul {
 }
 .preview-notice {
   margin: 18px 0;
-  color: #8a785b;
-  border: 1px solid #eee9df;
-  background: #fcfaf5;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
   border-radius: 8px;
   padding: 10px 14px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .subject-card-grid,
 .progress-page-grid {
@@ -236,7 +257,7 @@ ul {
 }
 .subject-card {
   border: 1px solid var(--border);
-  background: white;
+  background: var(--surface);
   border-radius: var(--radius);
   padding: 22px;
 }
@@ -251,11 +272,11 @@ ul {
 .subject-card p {
   color: var(--muted);
   margin: 8px 0 14px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .subject-card a {
   color: var(--tone-text);
-  font-size: 12px;
+  font-size: 13px;
   display: inline-flex;
   min-height: 44px;
   align-items: center;

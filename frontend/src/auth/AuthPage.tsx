@@ -1,9 +1,10 @@
 import {useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link,Navigate,useNavigate,useLocation} from 'react-router-dom';
-import {GraduationCap} from 'lucide-react';
+import {BrandMark} from '../components/common/BrandMark';
 import {useAuth} from './AuthContext';
 import {authMessage} from './authStore';
+import { motion } from 'motion/react';
 
 export function AuthPage({mode}:{mode:'sign-in'|'sign-up'|'forgot-password'|'reset-password'|'check-email'|'callback'}) {
   const auth=useAuth(),navigate=useNavigate(),location=useLocation();
@@ -47,5 +48,5 @@ export function AuthPage({mode}:{mode:'sign-in'|'sign-up'|'forgot-password'|'res
   </AuthFrame>;
 }
 function AuthFrame({title,children}:{title:string;children:React.ReactNode}) {
-  return <main className="auth-shell"><section className="panel auth-card"><div className="brand"><GraduationCap aria-hidden="true" /> AI Study Planner</div><h1>{title}</h1><p className="muted">Make time for what matters.</p>{children}</section></main>;
+  return <main className="auth-shell"><motion.section initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{duration:0.24}} className="panel auth-card"><div className="brand"><BrandMark /> AI Study Planner</div><h1>{title}</h1><p className="muted">Make time for what matters.</p>{children}</motion.section></main>;
 }

@@ -1,10 +1,14 @@
 import { useAppData } from "../../hooks/useAppData";
 import { hours } from "../../utils/dates";
 import { Panel } from "../common/Panel";
+import { Link } from "react-router-dom";
 
 export function StudyLoad() {
   const { studyDays, summary } = useAppData();
   const maximum = Math.max(4, ...studyDays.map((day) => day.planned_hours));
+  if (!studyDays.some(day => day.planned_hours > 0)) return <Panel title="Study load (hours)" className="study-load-panel">
+    <div className="insight-empty"><h3>No study time planned</h3><p>{summary.availableHours ? `${hours(summary.availableHours)} available this week. Reserve a block when you are ready.` : "Set your available hours to make room for focused work."}</p><Link className="text-button" to="/calendar">Plan study time →</Link></div>
+  </Panel>;
   return (
     <Panel title="Study load (hours)" className="study-load-panel">
       <div

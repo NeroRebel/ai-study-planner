@@ -1,0 +1,57 @@
+/* Semantic themes: accents are independent of risk, warning and success. */
+:root {
+  --accent-h: 36; --accent-s: 36%;
+  --background: #F5F3EE; --surface: #FAF9F6; --surface-muted: #F0EEE8; --surface-hover: #EAE7E0;
+  --text: #1F1F1F; --muted: #6F6B65; --tertiary: #6F6B65;
+  --border: #E4E0D8; --border-subtle: #EBE7DF; --border-strong: #C5BFB4;
+  --navigation-surface: #F0EEE8; --assistant-surface: #F2F0EA; --elevated-surface: #FCFBF8;
+  --accent: hsl(var(--accent-h) var(--accent-s) 32%); --accent-hover: hsl(var(--accent-h) var(--accent-s) 25%);
+  --accent-soft: hsl(var(--accent-h) 16% 93%); --accent-border: hsl(var(--accent-h) 20% 75%);
+  --on-accent: #fff; --focus: var(--accent);
+  --nav-active: color-mix(in srgb, var(--accent) 7%, var(--navigation-surface));
+  --shadow-card: 0 1px 2px #25302704; --shadow-popover: 0 12px 48px #25302718;
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-card: 10px; --radius-modal: 12px;
+  --sidebar-expanded-width: 224px; --sidebar-width: var(--sidebar-expanded-width); --shell-sidebar-width: var(--sidebar-expanded-width);
+  --control-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236F6B65' stroke-width='1.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+:root[data-accent=red] { --accent-h: 5; --accent-s: 43%; }
+:root[data-accent=blue] { --accent-h: 215; --accent-s: 45%; }
+:root[data-accent=green] { --accent-h: 145; --accent-s: 30%; }
+:root[data-accent=violet] { --accent-h: 265; --accent-s: 35%; }
+:root[data-accent=teal] { --accent-h: 180; --accent-s: 35%; }
+:root[data-theme=dark] {
+  --background: #1A1A1A; --navigation-surface: #191919; --surface: #212121;
+  --surface-muted: #1E1E1E; --surface-hover: #292929; --assistant-surface: #1E1E1E; --elevated-surface: #242424;
+  --text: #F2F2F2; --muted: #A8A8A8; --tertiary: #989898;
+  --border: #303030; --border-subtle: #282828; --border-strong: #5A5A5A;
+  --accent: hsl(var(--accent-h) 42% 73%); --accent-hover: hsl(var(--accent-h) 46% 80%);
+  --accent-soft: hsl(var(--accent-h) 12% 24%); --accent-border: hsl(var(--accent-h) 18% 43%); --on-accent: #17191b;
+  --gold: #baa27f; --purple: #c8b8eb; --purple-soft: #302b3d; --blue: #aac6ef; --blue-soft: #25344a;
+  --success: #9dd4ae; --success-soft: #22362a; --warning: #edcd8e; --warning-soft: #3b3221;
+  --destructive: #ffb4c0; --destructive-soft: #422a31;
+  --overlay: #080a0dbb; --availability-fill: #426b4433;
+  --shadow-card: 0 1px 3px #10121414; --shadow-card-color: transparent; --shadow-popover: 0 16px 48px #11131855; --shadow-overlay-color: #0006;
+  --control-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A8A8A8' stroke-width='1.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+:root[data-theme=dark] .tone-blue { --tone-bg: #263448; --tone-text: #b7cef4; --tone-fill: #8caade; }
+:root[data-theme=dark] .tone-gold { --tone-bg: #393125; --tone-text: #e6c591; --tone-fill: #c7a270; }
+:root[data-theme=dark] .tone-purple { --tone-bg: #322d46; --tone-text: #d0bff4; --tone-fill: #b19bdf; }
+:root[data-theme=dark] .tone-green { --tone-bg: #27392e; --tone-text: #add6b7; --tone-fill: #89b896; }
+:root[data-contrast=high] {
+  --text: #0c1014; --muted: #343c45; --tertiary: #434d58;
+  --border: #707984; --border-subtle: #8a929b; --border-strong: #434d58;
+  --accent: hsl(var(--accent-h) var(--accent-s) 24%); --accent-hover: hsl(var(--accent-h) var(--accent-s) 18%);
+  --success: #205436; --warning: #684510; --destructive: #982639; --nav-active: var(--accent-soft);
+}
+:root[data-theme=dark][data-contrast=high] {
+  --text: #fff; --muted: #e0e4e9; --tertiary: #cbd2db;
+  --border: #a0aab7; --border-subtle: #7c8795; --border-strong: #c3cbd5;
+  --accent: hsl(var(--accent-h) 75% 82%); --accent-hover: hsl(var(--accent-h) 80% 89%);
+  --success: #b3f0c7; --warning: #ffe2a8; --destructive: #ffcad4;
+}
+:root[data-sidebar=collapsed] { --shell-sidebar-width: 64px; }
+:root[data-contrast=high] .risk-badge { border: 1px solid currentColor; font-weight: 650; }
+:root[data-contrast=high] .progress-bar > span { outline: 1px solid var(--text); }
+:root[data-motion=reduced] *, :root[data-motion=reduced] *::before, :root[data-motion=reduced] *::after {
+  animation: none !important; transition: none !important; scroll-behavior: auto !important;
+}

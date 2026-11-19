@@ -1,7 +1,8 @@
-import { ProfileAvatar } from "../../auth/ProfilePanel";
 import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { GraduationCap, Sparkles, Menu } from "lucide-react";
+import { Sparkles, Menu, UserRound } from "lucide-react";
+import { BrandMark } from "../common/BrandMark";
 import { RiskNotice } from "../common/LiveRisk";
 import { DataBoundary } from "../common/DataBoundary";
 import { Sidebar } from "./Sidebar";
@@ -10,6 +11,7 @@ import { Modal } from "../common/Modal";
 import { TaskDialog } from "../tasks/TaskDialog";
 import { SessionDialog } from "../calendar/SessionDialog";
 import { useAppData } from "../../hooks/useAppData";
+import { Breadcrumbs } from "./Breadcrumbs";
 
 export function AppLayout() {
   const { pathname } = useLocation();
@@ -18,7 +20,7 @@ export function AppLayout() {
   const mainRef = useRef<HTMLElement>(null);
   const title =
     navigation.find((item) => item.to === pathname)?.label ??
-    (pathname === "/assistant" ? "Assistant" : "Page not found");
+    (pathname === "/assistant" ? "Assistant" : pathname === "/profile" ? "Profile" : "Page not found");
   useEffect(() => {
     document.title = title + " · AI Study Planner";
     window.scrollTo(0, 0);
@@ -33,20 +35,16 @@ export function AppLayout() {
       <div className={"app-body " + (pathname === "/" ? "is-dashboard" : "")}>
         <header className="topbar">
           <Link to="/" className="mobile-brand">
-            <GraduationCap size={23} aria-hidden="true" />
+            <BrandMark size={23} />
             AI Study Planner
           </Link>
-          <span className="breadcrumb">
-            My workspace <span>/</span>
-            {title}
-          </span>
+          <Breadcrumbs title={title} pathname={pathname} detail={taskDialog ? taskDialog === "new" ? "New task" : "Edit task" : sessionDialog ? sessionDialog.id === "new" ? "New study block" : "Study block" : undefined} />
           <div className="topbar-right">
-            <span className="demo-badge">Persistent workspace</span>
+            <span className="workspace-state">Personal workspace</span>
             <Link className="assistant-link" to="/assistant">
               <Sparkles size={16} />
               Assistant
             </Link>
-            <ProfileAvatar className="mini-avatar" />
             <button
               className="mobile-more icon-button"
               onClick={() => setMore(true)}
@@ -61,7 +59,10 @@ export function AppLayout() {
             <button className="text-button" onClick={clearMutationError}>Dismiss</button></div>}
           {["/", "/tasks", "/subjects", "/deadlines"].includes(pathname) && <RiskNotice />}
           {pending && <div className="data-notice" role="status">Saving and refreshing your workspace…</div>}
-          {pathname === "/settings" ? <Outlet /> : <DataBoundary><Outlet /></DataBoundary>}
+          {/* Entrance only: never retain a departing account or route subtree. */}
+          <motion.div key={pathname} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+            {["/settings", "/profile"].includes(pathname) ? <Outlet /> : <DataBoundary><Outlet /></DataBoundary>}
+          </motion.div>
           {status === "ready" && <div className="data-refresh"><button className="text-button" disabled={pending} onClick={retry}>Refresh data</button></div>}
         </main>
         <footer className="app-footer">
@@ -80,6 +81,7 @@ export function AppLayout() {
       {more && (
         <Modal title="More pages" onClose={() => setMore(false)}>
           <nav className="more-navigation" aria-label="More navigation">
+            <Link to="/profile" onClick={() => setMore(false)}><UserRound size={19} aria-hidden="true" />Profile</Link>
             {navigation
               .filter((item) => !["/", "/tasks", "/calendar"].includes(item.to))
               .map(({ to, label, icon: Icon }) => (

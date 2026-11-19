@@ -8,6 +8,7 @@ import { ProgressBar } from "../common/ProgressBar";
 import { formatDate } from "../../utils/format";
 import { RiskValue } from "../common/LiveRisk";
 import { hours } from "../../utils/dates";
+import { motion } from "motion/react";
 
 export function SubjectCard({
   subject,
@@ -30,7 +31,8 @@ export function SubjectCard({
   )[0];
   const progress = selectSubjectProgress(state, subject.id).progress;
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.995 }}
       style={subjectColorStyle(subject.color)} className={"subject-overview-card tone-" + subject.color}
       onClick={onOpen}
     >
@@ -67,6 +69,6 @@ export function SubjectCard({
         <strong>{next ? formatDate(next.deadline) : "All caught up"}</strong>
       </span>
       <span className="subject-next">Risk <RiskValue assessment={state.subjectRisks.find(item => item.subject_id === subject.id)} /></span>
-    </button>
+    </motion.button>
   );
 }

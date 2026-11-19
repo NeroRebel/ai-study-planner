@@ -2,12 +2,18 @@ import { useAppData } from "../../hooks/useAppData";
 import { Modal } from "../common/Modal";
 import type { ReplanPreview } from "../../api/replanning";
 import type { Task } from "../../types";
+import { CircleCheck, CalendarRange, TriangleAlert } from "lucide-react";
+import { LoadingState } from "../common/LoadingState";
+import { Feedback } from "../common/Feedback";
 
 const nameOf = (tasks: Task[], id: string) => tasks.find(task => task.id === id)?.title ?? "Task no longer available";
 export function ReplanDetails({ preview, tasks }: { preview: ReplanPreview; tasks: Task[] }) {
   const count = preview.sessions_moved.length + preview.sessions_created.length + preview.sessions_removed.length;
+  const Icon = preview.unscheduled_minutes ? TriangleAlert : count ? CalendarRange : CircleCheck;
   return <>
-    <p>{count ? `${count} session changes proposed.` : preview.unscheduled_minutes ? "No session changes can resolve the remaining shortfall." : preview.warnings.length ? "No automatic changes proposed. Review the warnings below." : "No changes needed. Your current plan is valid."}</p>
+    <div className={"replan-outcome " + (preview.unscheduled_minutes ? "is-partial" : !count && !preview.warnings.length ? "is-valid" : "")}>
+      <Icon size={20} aria-hidden="true" /><p>{count ? `${count} session changes proposed.` : preview.unscheduled_minutes ? "No session changes can resolve the remaining shortfall." : preview.warnings.length ? "No automatic changes proposed. Review the warnings below." : "No changes needed. Your current plan is valid."}</p>
+    </div>
     <div className="detail-summary">
       <span>Moved: {preview.sessions_moved.length}</span><span>Added: {preview.sessions_created.length}</span>
       <span>Removed: {preview.sessions_removed.length}</span><span>Kept: {preview.sessions_kept.length}</span>
@@ -47,11 +53,11 @@ export function ReplanDialog() {
   if (!["previewing", "ready", "applying", "error"].includes(replanStatus)) return null;
   const busy = replanStatus === "previewing" || replanStatus === "applying";
   const count = replanPreview ? replanPreview.sessions_created.length + replanPreview.sessions_moved.length + replanPreview.sessions_removed.length : 0;
-  return <Modal title="Replan study schedule" wide onClose={() => { if (!busy) cancelReplan(); }}>
+  return <Modal title="Replan study schedule" wide closeDisabled={busy} onClose={cancelReplan}>
     <div aria-busy={busy}>
-      {replanStatus === "previewing" && <p role="status">Preparing a safe replanning preview…</p>}
+      {replanStatus === "previewing" && <LoadingState title="Preparing a safe replanning preview…" description="Review the changes before anything is saved." />}
       {replanPreview && <ReplanDetails preview={replanPreview} tasks={state.tasks} />}
-      {replanError && <p role="alert" className="form-error">{replanError}</p>}
+      {replanError && <Feedback tone="error">{replanError}</Feedback>}
       <div className="form-actions">
         <button type="button" className="button" disabled={busy} onClick={cancelReplan}>Cancel</button>
         {replanError && replanRange && <button type="button" className="button" disabled={busy}

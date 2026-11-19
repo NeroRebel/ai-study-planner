@@ -4,9 +4,12 @@ import {
   Clock3,
   TrendingUp,
   ArrowRight,
-  Search,
   Sun,
+  PanelRightOpen,
 } from "lucide-react";
+import { useRef, useState } from "react";
+import { useMediaQuery } from "../hooks/useMediaQuery";
+import { uiPreferences, useUiPreferences } from "../state/uiPreferences";
 import { Link } from "react-router-dom";
 import { StatCard } from "../components/dashboard/StatCard";
 import { TodayPriorities } from "../components/dashboard/TodayPriorities";
@@ -14,7 +17,7 @@ import { WeeklyPlanner } from "../components/calendar/WeeklyPlanner";
 import { UpcomingDeadlines } from "../components/dashboard/UpcomingDeadlines";
 import { SubjectProgress } from "../components/dashboard/SubjectProgress";
 import { StudyLoad } from "../components/dashboard/StudyLoad";
-import { AssistantPanel } from "../components/assistant/AssistantPanel";
+import { DashboardAssistant } from "../components/assistant/DashboardAssistant";
 import { currentWeek, weekLabel, TIMEZONE } from "../utils/dates";
 import { useAppData } from "../hooks/useAppData";
 import { currentRisk } from "../state/riskSelectors";
@@ -22,10 +25,17 @@ import { hours } from "../utils/dates";
 
 export function DashboardPage() {
   const { state, summary: stats, riskStatus } = useAppData();
+  const { assistantHidden } = useUiPreferences();
+  const docked = useMediaQuery("(min-width: 1440px)");
+  const [overlay, setOverlay] = useState({ open: false, docked });
+  // A layout change closes the temporary overlay; returning to tablet must not reopen it.
+  if (overlay.docked !== docked) setOverlay({ open: false, docked });
+  const overlayOpen = overlay.open && !docked;
+  const assistantTrigger = useRef<HTMLButtonElement>(null);
   const riskReady = riskStatus === "ready" && state.risks.every(currentRisk);
   const highCount = state.risks.filter(risk => currentRisk(risk) && risk.level === "HIGH").length;
   return (
-    <div className="dashboard-layout">
+    <div className={"dashboard-layout " + (docked && !assistantHidden ? "has-assistant-dock" : "")}>
       <div className="dashboard-main">
         <header className="dashboard-header">
           <div>
@@ -36,20 +46,16 @@ export function DashboardPage() {
             <p>
               Here's your study overview.{" "}
               <span>
-                {riskReady ? `${highCount} high-risk deadlines need attention.` : riskStatus === "loading" ? "Checking deadline risks…" : "Risk assessment is unavailable."}
+                {riskReady ? highCount ? `${highCount} high-risk deadlines need attention.` : "No high-risk deadlines right now." : riskStatus === "loading" ? "Checking deadline risks…" : "Risk assessment is unavailable."}
               </span>
             </p>
           </div>
           <div className="dashboard-header-tools">
-            <span className="demo-badge">Saved workspace</span>
-            <label className="dashboard-search">
-              <Search size={16} aria-hidden="true" />
-              <input
-                disabled
-                aria-label="Search (unavailable in preview)"
-                placeholder="Search tasks, subjects..."
-              />
-            </label>
+            <Link className="button button-secondary button-compact" to="/calendar">View calendar</Link>
+            {(!docked || assistantHidden) && <button ref={assistantTrigger} type="button" className="button button-subtle button-compact dashboard-assistant-toggle" aria-label="Show assistant panel" aria-expanded={!docked && overlayOpen}
+              onClick={() => docked ? uiPreferences.update({ assistantHidden: false }) : setOverlay({ open: true, docked })}>
+              <PanelRightOpen size={16} strokeWidth={1.7} aria-hidden="true" />Assistant
+            </button>}
           </div>
         </header>
         <div className="stat-grid">
@@ -101,7 +107,7 @@ export function DashboardPage() {
           <UpcomingDeadlines />
         </div>
         <div className="dashboard-snapshot">
-          {weekLabel(currentWeek())} · {TIMEZONE} · Persisted manual sessions
+          {weekLabel(currentWeek())} · {TIMEZONE} · Saved study sessions
         </div>
         <div className="mobile-shortcuts">
           <span>Explore your workspace</span>
@@ -118,9 +124,8 @@ export function DashboardPage() {
           ))}
         </div>
       </div>
-      <div className="dashboard-assistant">
-        <AssistantPanel />
-      </div>
+      <DashboardAssistant docked={docked} hidden={assistantHidden} overlayOpen={overlayOpen}
+        onClose={() => { setOverlay({ open: false, docked }); if (docked) uiPreferences.update({ assistantHidden: true }); requestAnimationFrame(() => assistantTrigger.current?.focus()); }} />
     </div>
   );
 }

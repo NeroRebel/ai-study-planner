@@ -4,6 +4,7 @@ import type { StudySession } from "../../types";
 import { useAppData } from "../../hooks/useAppData";
 import { timeMinutes } from "../../state/appState";
 import { statusLabels } from "../../utils/format";
+import { motion } from "motion/react";
 
 export function StudyBlock({
   session,
@@ -29,7 +30,8 @@ export function StudyBlock({
       ((timeMinutes(session.end_time) - timeMinutes(session.start_time)) / ((endHour - startHour) * 60)) * 100 + "%",
   } as CSSProperties;
   return (
-    <li className={"study-block tone-" + subject.color + (session.planned_minutes < 60 ? " is-short-session" : "")} style={style}>
+    <motion.li layout="position" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+      className={"study-block tone-" + subject.color + (session.planned_minutes < 60 ? " is-short-session" : "")} style={style}>
       <button
         className="study-block-button"
         onClick={() => openSession({ id: session.id })}
@@ -56,13 +58,13 @@ export function StudyBlock({
           statusLabels[session.status]
         }
       >
-        <strong>{subject.name}</strong>
+        <strong>{task.title}</strong>
+        <span className="block-subject">{subject.name}</span>
         <span className="block-time">
           {session.start_time}–{session.end_time}
         </span>
-        <span className="block-task">{task.title}</span>
         <span className="block-status">{statusLabels[session.status]}</span>
       </button>
-    </li>
+    </motion.li>
   );
 }

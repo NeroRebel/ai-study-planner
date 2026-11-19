@@ -3,3 +3,9 @@
 @import "./styles/layout.css";
 @import "./styles/dashboard.css";
 @import "./styles/prototype.css";
+@import "./styles/auth.css";
+@import "./styles/polish.css";
+@import "./styles/themes.css";
+@import "./styles/controls.css";
+@import "./styles/refinements.css";
+@import "./styles/shell.css";

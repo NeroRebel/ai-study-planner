@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { PendingConfirmation } from "../../api/assistant";
 import type { Task } from "../../types";
 import { ReplanDetails } from "../calendar/ReplanDialog";
+import { motion } from "motion/react";
+import { ShieldCheck, CircleCheck } from "lucide-react";
 
 function display(value: unknown): string {
   if (value === null) return "Not set";
@@ -18,12 +20,15 @@ export function ConfirmationCard({confirmation,busy,onConfirm,onCancel,tasks}: {
   useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),5000);return ()=>clearInterval(timer);},[]);
   const expired=Date.parse(confirmation.expires_at)<=clock;
   const pending=confirmation.status==="PENDING" && !expired;
-  return <section className="assistant-result assistant-confirmation" aria-label="Review proposed change">
+  return <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}
+    className={"assistant-result assistant-confirmation " + (confirmation.status === "CONFIRMED" ? "confirmation-saved" : "")} aria-label="Review proposed change">
+    <div className="confirmation-label">{confirmation.status === "CONFIRMED" ? <CircleCheck size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
+      {confirmation.status === "CONFIRMED" ? "Saved to your planner" : pending ? "Your approval is required" : "Proposal closed"}</div>
     <h3>{confirmation.type.replaceAll("_"," ")}</h3>
     {confirmation.preview ? <ReplanDetails preview={confirmation.preview} tasks={tasks} /> :
       <dl className="context-list">{Object.entries(confirmation.summary).filter(([key])=>key!=="action").map(([key,value])=><div key={key}><dt>{key.replaceAll("_"," ")}</dt><dd>{display(value)}</dd></div>)}</dl>}
     <p className="form-note">{pending ? "Proposed only. Confirm saves these exact changes; planner validation runs again." : expired && confirmation.status==="PENDING" ? "Confirmation expired. Ask for a new proposal." : confirmation.status==="EXPIRED" ? "Proposal unavailable or stale. Ask for a new proposal." : confirmation.status==="CONFIRMED" ? "Confirmed and saved." : "Cancelled. No changes saved."}</p>
     {pending && <div className="assistant-actions"><button className="button button-secondary" disabled={busy} onClick={()=>onCancel(confirmation.id)}>Cancel</button>
       <button className="button button-primary" disabled={busy} onClick={()=>onConfirm(confirmation.id)}>Confirm {confirmation.type==="apply_replan" ? "plan changes" : "change"}</button></div>}
-  </section>;
+  </motion.section>;
 }

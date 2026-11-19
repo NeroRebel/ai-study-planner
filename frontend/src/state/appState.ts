@@ -3,9 +3,8 @@ import type { Subject, Task, StudySession, Availability, DeadlineRisk, SubjectRi
 import type { SubjectInput } from "../api/subjects";
 
 export interface Preferences {
-  name: string; program: string; university: string; sessionMinutes: number;
-  breakMinutes: number; startTime: string; endTime: string; splitTasks: boolean;
-  earliestFirst: boolean; avoidEvenings: boolean; appearance: "system" | "light" | "dark";
+  // Account display context. Device presentation defaults live in uiPreferences.
+  name: string;
 }
 export interface AppState {
   subjects: Subject[]; tasks: Task[]; sessions: StudySession[]; availability: Availability[];
@@ -34,9 +33,7 @@ export type AppAction =
 export function createInitialState(): AppState {
   return { subjects: [], tasks: [], sessions: [], availability: [],
     risks: [], subjectRisks: [],
-    preferences: { name: "Alex Morgan", program: "Computer Science", university: "Danube University",
-      sessionMinutes: 60, breakMinutes: 15, startTime: "09:00", endTime: "20:00",
-      splitTasks: true, earliestFirst: true, avoidEvenings: true, appearance: "light" } };
+    preferences: { name: "Student" } };
 }
 export const isActive = (task: Task) => task.status !== "COMPLETED" && task.status !== "CANCELLED";
 export function timeMinutes(value: string) {

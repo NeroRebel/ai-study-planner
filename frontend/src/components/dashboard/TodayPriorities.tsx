@@ -16,9 +16,9 @@ export function TodayPriorities() {
       <ul className="task-list">
         {ordered.map((task) => task && <TaskRow key={task.id} task={task} />)}
       </ul>
-      <div className="panel-footnote">
+      {ordered.length > 0 && <div className="panel-footnote">
         Complete or open a task · saved to server
-      </div>
+      </div>}
     </Panel>
   );
 }

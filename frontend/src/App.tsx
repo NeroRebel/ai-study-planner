@@ -3,7 +3,6 @@ import { AuthGate } from "./auth/AuthGate";
 import { AuthPage } from "./auth/AuthPage";
 import { useAuth } from "./auth/AuthContext";
 import { createApi } from "./api";
-import "./styles/auth.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AppDataProvider } from "./state/AppDataProvider";
 import { AppLayout } from "./components/layout/AppLayout";
@@ -14,6 +13,7 @@ import { CalendarPage } from "./pages/CalendarPage";
 import { DeadlinesPage } from "./pages/DeadlinesPage";
 import { ProgressPage } from "./pages/ProgressPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
@@ -41,6 +41,7 @@ function Workspace() {
       <Route path="subjects" element={<SubjectsPage />} /><Route path="calendar" element={<CalendarPage />} />
       <Route path="deadlines" element={<DeadlinesPage />} /><Route path="progress" element={<ProgressPage />} />
       <Route path="settings" element={<SettingsPage />} /><Route path="assistant" element={<AssistantPage />} />
+      <Route path="profile" element={<ProfilePage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Route></Routes>
   </AppDataProvider>;
